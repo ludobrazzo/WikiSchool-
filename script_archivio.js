@@ -137,20 +137,29 @@ function renderCards(projects) {
   projects.forEach((d) => {
     const mailLink = `mailto:${d.authorEmail}?subject=Info: ${d.title}`;
 
-    // Cloudinary usa d.fileLink e d.thumbnail
     const fileURL = d.fileLink || "";
-    const thumb = d.thumbnail || fileURL;
+    let thumb = d.thumbnail || fileURL;
+
+    // Per sicurezza (file vecchi): se l'anteprima termina ancora in .pdf, forziamo in .jpg
+    if (thumb && thumb.toLowerCase().endsWith('.pdf')) {
+        thumb = thumb.replace(/\.pdf$/i, '.jpg');
+    }
+
+    // Un'immagine generica di backup per i link Drive esterni o se il thumbnail fallisce
+    const fallbackImage = "https://images.unsplash.com/photo-1568227452042-49339e0340f1?w=500";
 
     gallery.insertAdjacentHTML(
       "beforeend",
       `<div class="card-pro">
-        <div class="card-media"><img src="${thumb}"></div>
+        <div class="card-media">
+           <img src="${thumb || fallbackImage}" onerror="this.src='${fallbackImage}'">
+        </div>
         <div class="card-body">
           <span class="badge">${d.category}</span>
           <h3 style="margin:10px 0 5px 0; font-size:1.2rem;">${d.title}</h3>
           <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">✍️ Autore: ${d.authorName}</p>
           <div style="display:flex; gap:10px;">
-            <button onclick="visualizza('${fileURL}')" class="btn-action" style="flex:3;">Apri</button>
+            <button onclick="visualizza('${fileURL}')" class="btn-action" style="flex:3; border:none; cursor:pointer;">Apri</button>
             <a href="${mailLink}" style="flex:1; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px; text-decoration:none; font-size:1.2rem;">✉️</a>
           </div>
         </div>
@@ -198,14 +207,18 @@ searchBar.addEventListener("input", async (e) => {
   renderCards(results);
 });
 
-// MODIFICATA: Logica di apertura semplificata per Cloudinary
 window.visualizza = (fileURL) => {
-  if (!fileURL || fileURL === "undefined" || fileURL === "") {
-    alert("Errore: Il file non è disponibile.");
+  if (!fileURL || fileURL === "undefined" || fileURL.trim() === "") {
+    alert("Errore: Il file non è disponibile oppure il link è vuoto.");
     return;
   }
-  // Essendo un link diretto, lo apriamo semplicemente in una nuova scheda
-  window.open(fileURL, "_blank");
+  
+  let secureURL = fileURL;
+  if (secureURL.startsWith('http://')) {
+      secureURL = secureURL.replace('http://', 'https://');
+  }
+
+  window.open(secureURL, "_blank");
 };
 
 if (backBtn) backBtn.onclick = showYears;
