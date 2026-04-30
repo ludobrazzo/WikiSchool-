@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WikiSchool | Archivio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="glass-nav">
+      <a href="index.html" class="brand">Wiki<span>School</span></a>
+      <div id="nav-info" style="font-weight: 600; color: var(--primary)">
+        Archivio Materie
+      </div>
+    </nav>
+
+    <div class="container" style="margin-top: 50px">
+      <div class="search-container">
+        <input
+          type="text"
+          id="search-bar"
+          placeholder="🔍 Cerca tra tutti gli appunti dell'archivio..."
+        />
+      </div>
+
+      <button
+        id="back-btn"
+        class="btn-primary"
+        style="display: none; margin-bottom: 20px"
+      >
+        ← Torna indietro
+      </button>
+
+      <div id="gallery" class="masonry-grid"></div>
+    </div>
+
+    <script type="module" src="script_archivio.js"></script>
+  </body>
+</html>
