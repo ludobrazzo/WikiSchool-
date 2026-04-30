@@ -73,7 +73,7 @@ if (uploadBtn) {
     if (!title || !year || !category) return alert("Compila tutti i campi!");
 
     let finalFileURL = externalLink;
-    let finalThumb = "";
+    let finalThumb = ""; // Sarà vuoto per i link esterni, gestito poi dall'archivio
 
     if (fileInput.files.length > 0) {
       uploadBtn.innerText = "Caricamento in corso...";
@@ -83,10 +83,8 @@ if (uploadBtn) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      // Rimosso access_mode che causava l'errore del pop-up
 
       try {
-        // Usiamo /auto/ per far capire a Cloudinary che tipo di file è
         const resp = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
           {
@@ -100,11 +98,15 @@ if (uploadBtn) {
 
         finalFileURL = data.secure_url;
 
-        // Se è un PDF, creiamo una miniatura immagine, altrimenti usiamo il file stesso
-        finalThumb =
-          data.resource_type === "image"
-            ? data.secure_url
-            : data.secure_url.replace(".pdf", ".jpg");
+        // MODIFICA PER L'ANTEPRIMA: Controlla se il file caricato termina con .pdf
+        if (finalFileURL.toLowerCase().endsWith('.pdf')) {
+            // Sostituisce .pdf con .jpg per forzare Cloudinary a generare un'immagine della 1° pagina
+            finalThumb = finalFileURL.replace(/\.pdf$/i, '.jpg');
+        } else {
+            // Se è già un'immagine (jpg, png, ecc.), l'anteprima è il file stesso
+            finalThumb = finalFileURL;
+        }
+
       } catch (err) {
         alert("Errore Caricamento: " + err.message);
         uploadBtn.innerText = "Pubblica";
@@ -128,7 +130,7 @@ if (uploadBtn) {
       });
 
       alert("Pubblicato con successo!");
-      window.location.reload(); // Ricarica la pagina iniziale
+      window.location.reload(); 
     } catch (err) {
       alert("Errore salvataggio: " + err.message);
       uploadBtn.innerText = "Pubblica";
