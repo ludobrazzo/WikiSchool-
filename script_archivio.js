@@ -64,24 +64,71 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// LE TUE 16 MATERIE
 const subjects = [
-  { name: "Italiano", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500" },
-  { name: "Storia", img: "https://images.unsplash.com/photo-1461301214746-1e109215d6d3?w=500" },
-  { name: "Matematica", img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500" },
-  { name: "Inglese", img: "https://images.unsplash.com/photo-1528642474498-1af0c17fd8c3?w=500" },
-  { name: "Informatica", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500" },
-  { name: "Fisica", img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500" },
-  { name: "Scienze", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
-  { name: "Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" },
-  { name: "Filosofia", img: "https://images.unsplash.com/photo-1505664159854-2328114f17f4?w=500" },
-  { name: "Educazione Fisica", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500" },
-  { name: "Latino", img: "https://images.unsplash.com/photo-1555627237-7ea4c346c827?w=500" },
-  { name: "Greco", img: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=500" },
-  { name: "Chimica", img: "https://images.unsplash.com/photo-1532187875605-2fe358a3d46a?w=500" },
-  { name: "Diritto", img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=500" },
-  { name: "Economia", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=500" },
-  { name: "Geografia", img: "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=500" }
+  {
+    name: "Italiano",
+    img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500",
+  },
+  {
+    name: "Latino",
+    img: "https://images.unsplash.com/photo-1543165796-5426273eaab3?w=500",
+  },
+  {
+    name: "Storia",
+    img: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800",
+  },
+  {
+    name: "Filosofia",
+    img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800",
+  },
+  {
+    name: "Educazione Civica",
+    img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=500",
+  },
+  {
+    name: "Matematica",
+    img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500",
+  },
+  {
+    name: "Fisica",
+    img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500",
+  },
+  {
+    name: "Scienze Naturali",
+    img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500",
+  },
+  {
+    name: "Informatica",
+    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500",
+  },
+  {
+    name: "Disegno e Storia dell'Arte",
+    img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500",
+  },
+  {
+    name: "Inglese",
+    img: "https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=500",
+  },
+  {
+    name: "Francese",
+    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500",
+  },
+  {
+    name: "Spagnolo",
+    img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=500",
+  },
+  {
+    name: "Scienze Umane",
+    img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500",
+  },
+  {
+    name: "Diritto ed Economia",
+    img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500",
+  },
+  {
+    name: "Scienze Motorie",
+    img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500",
+  },
 ];
 
 function showYears() {
