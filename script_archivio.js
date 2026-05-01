@@ -1,10 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  where,
+  getFirestore, collection, getDocs, query, where, doc, updateDoc, arrayUnion, arrayRemove, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -17,6 +14,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
 const gallery = document.getElementById("gallery");
@@ -24,207 +22,232 @@ const backBtn = document.getElementById("back-btn");
 const navInfo = document.getElementById("nav-info");
 const searchBar = document.getElementById("search-bar");
 
+let currentUser = null;
+onAuthStateChanged(auth, (user) => { currentUser = user; });
+
 let selectedYear = null;
 let currentFolderProjects = [];
+let currentDocForComments = null;
 
 const subjects = [
-  {
-    name: "Italiano",
-    img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500",
-  },
-  {
-    name: "Latino",
-    img: "https://images.unsplash.com/photo-1543165796-5426273eaab3?w=500",
-  },
-  {
-    name: "Storia",
-    img: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800",
-  },
-  {
-    name: "Filosofia",
-    img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800",
-  },
-  {
-    name: "Educazione Civica",
-    img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=500",
-  },
-  {
-    name: "Matematica",
-    img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500",
-  },
-  {
-    name: "Fisica",
-    img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500",
-  },
-  {
-    name: "Scienze Naturali",
-    img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500",
-  },
-  {
-    name: "Informatica",
-    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500",
-  },
-  {
-    name: "Disegno e Storia dell'Arte",
-    img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500",
-  },
-  {
-    name: "Inglese",
-    img: "https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=500",
-  },
-  {
-    name: "Francese",
-    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500",
-  },
-  {
-    name: "Spagnolo",
-    img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=500",
-  },
-  {
-    name: "Scienze Umane",
-    img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500",
-  },
-  {
-    name: "Diritto ed Economia",
-    img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500",
-  },
-  {
-    name: "Scienze Motorie",
-    img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500",
-  },
+  { name: "Italiano", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500" },
+  { name: "Storia", img: "https://images.unsplash.com/photo-1461301214746-1e109215d6d3?w=500" },
+  { name: "Matematica", img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500" },
+  { name: "Inglese", img: "https://images.unsplash.com/photo-1528642474498-1af0c17fd8c3?w=500" },
+  { name: "Informatica", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500" },
+  { name: "Fisica", img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500" },
+  { name: "Scienze", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
+  { name: "Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" }
 ];
 
 function showYears() {
+  gallery.innerHTML = "";
+  navInfo.innerText = "Archivio > Scegli Anno";
+  backBtn.style.display = "none";
   selectedYear = null;
-  currentFolderProjects = [];
-  gallery.innerHTML = "";
-  if (backBtn) backBtn.style.display = "none";
-  navInfo.innerText = "Archivio Materie";
+  
   for (let i = 1; i <= 5; i++) {
-    gallery.insertAdjacentHTML(
-      "beforeend",
-      `<div class="folder-card" onclick="selectYear('${i}')">
-        <div class="folder-img" style="background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:3rem; font-weight:800;">${i}°</div>
-        <div class="folder-label">${i}° Anno</div>
-      </div>`
-    );
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
+      <div style="background: var(--primary); height: 180px; display:flex; align-items:center; justify-content:center; color:white; font-size: 3rem; font-weight:800">${i}°</div>
+      <div class="card-content"><div class="card-title">${i}° Anno</div></div>
+    `;
+    d.onclick = () => selectYear(i.toString());
+    gallery.appendChild(d);
   }
 }
 
-window.selectYear = (year) => {
-  selectedYear = year;
+function selectYear(y) {
+  selectedYear = y;
   gallery.innerHTML = "";
-  if (backBtn) backBtn.style.display = "block";
-  navInfo.innerText = `Materie del ${year}° Anno`;
-  subjects.forEach((s) => {
-    gallery.insertAdjacentHTML(
-      "beforeend",
-      `<div class="folder-card" onclick="openFolder('${s.name}')">
-        <img src="${s.img}" class="folder-img">
-        <div class="folder-label">${s.name}</div>
-      </div>`
-    );
-  });
-};
+  navInfo.innerText = `${y}° Anno > Scegli Materia`;
+  backBtn.style.display = "block";
+  backBtn.onclick = showYears;
 
-function renderCards(projects) {
-  gallery.innerHTML = "";
-  if (projects.length === 0) {
-    gallery.innerHTML =
-      "<h3 style='grid-column:1/-1; text-align:center;'>Nessun appunto trovato.</h3>";
-    return;
-  }
-  projects.forEach((d) => {
-    const mailLink = `mailto:${d.authorEmail}?subject=Info: ${d.title}`;
-
-    const fileURL = d.fileLink || "";
-    let thumb = d.thumbnail || fileURL;
-
-    // Per sicurezza (file vecchi): se l'anteprima termina ancora in .pdf, forziamo in .jpg
-    if (thumb && thumb.toLowerCase().endsWith(".pdf")) {
-      thumb = thumb.replace(/\.pdf$/i, ".jpg");
-    }
-
-    // Un'immagine generica di backup per i link Drive esterni o se il thumbnail fallisce
-    const fallbackImage =
-      "https://images.unsplash.com/photo-1568227452042-49339e0340f1?w=500";
-
-    gallery.insertAdjacentHTML(
-      "beforeend",
-      `<div class="card-pro">
-        <div class="card-media">
-           <img src="${
-             thumb || fallbackImage
-           }" onerror="this.src='${fallbackImage}'">
-        </div>
-        <div class="card-body">
-          <span class="badge">${d.category}</span>
-          <h3 style="margin:10px 0 5px 0; font-size:1.2rem;">${d.title}</h3>
-          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">✍️ Autore: ${
-            d.authorName
-          }</p>
-          <div style="display:flex; gap:10px;">
-            <button onclick="visualizza('${fileURL}')" class="btn-action" style="flex:3; border:none; cursor:pointer;">Apri</button>
-            <a href="${mailLink}" style="flex:1; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px; text-decoration:none; font-size:1.2rem;">✉️</a>
-          </div>
-        </div>
-      </div>`
-    );
+  subjects.forEach(sub => {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
+      <img src="${sub.img}" alt="${sub.name}" />
+      <div class="card-content"><div class="card-title">${sub.name}</div></div>
+    `;
+    d.onclick = () => loadProjects(sub.name);
+    gallery.appendChild(d);
   });
 }
 
-window.openFolder = async (cat) => {
-  gallery.innerHTML = "<h3>Caricamento...</h3>";
+async function loadProjects(cat) {
+  gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Caricamento appunti in corso...</p>";
   navInfo.innerText = `${selectedYear}° Anno > ${cat}`;
+  backBtn.onclick = () => selectYear(selectedYear);
+
   try {
-    const q = query(
-      collection(db, "projects"),
-      where("year", "==", selectedYear),
-      where("category", "==", cat)
-    );
+    const q = query(collection(db, "projects"), where("year", "==", selectedYear), where("category", "==", cat));
     const snap = await getDocs(q);
     currentFolderProjects = [];
-    snap.forEach((doc) => currentFolderProjects.push(doc.data()));
+    snap.forEach((doc) => currentFolderProjects.push({ id: doc.id, ...doc.data() }));
     renderCards(currentFolderProjects);
   } catch (e) {
     console.error(e);
   }
-};
+}
+
+function renderCards(projectsArray) {
+  gallery.innerHTML = "";
+  if (projectsArray.length === 0) {
+    gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color: var(--text-muted)'>Nessun file trovato per questa categoria.</p>";
+    return;
+  }
+
+  projectsArray.forEach((p) => {
+    const d = document.createElement("div");
+    d.className = "card";
+    
+    // Controlla se l'utente attuale ha messo like o preferito
+    const hasLiked = currentUser && p.likes && p.likes.includes(currentUser.uid) ? "active-like" : "";
+    const hasFavorited = currentUser && p.favorites && p.favorites.includes(currentUser.uid) ? "active-fav" : "";
+    const likeCount = p.likes ? p.likes.length : 0;
+    const commentCount = p.comments ? p.comments.length : 0;
+
+    d.innerHTML = `
+      <img src="${p.thumbUrl || 'https://via.placeholder.com/400x300?text=Documento'}" alt="Doc" onclick="window.visualizza('${p.fileUrl}')" />
+      <div class="card-content">
+        <div class="card-title" onclick="window.visualizza('${p.fileUrl}')">${p.title}</div>
+        <div class="card-meta">di ${p.authorName || 'Anonimo'}</div>
+        
+        <div class="social-bar">
+          <button class="social-btn ${hasLiked}" onclick="toggleLike('${p.id}', this)">
+            ♥ <span class="like-count">${likeCount}</span>
+          </button>
+          <button class="social-btn" onclick="openComments('${p.id}')">
+            💬 <span class="comment-count">${commentCount}</span>
+          </button>
+          <button class="social-btn ${hasFavorited}" onclick="toggleFavorite('${p.id}', this)">
+            ⭐
+          </button>
+        </div>
+      </div>
+    `;
+    gallery.appendChild(d);
+  });
+}
 
 searchBar.addEventListener("input", async (e) => {
   const term = e.target.value.toLowerCase();
   if (term.length === 0) {
     if (!selectedYear) showYears();
-    else if (navInfo.innerText.includes(">"))
-      renderCards(currentFolderProjects);
-    else selectYear(selectedYear);
+    else if (navInfo.innerText.includes("> Scegli Materia")) selectYear(selectedYear);
+    else renderCards(currentFolderProjects);
     return;
   }
+  
   const snap = await getDocs(collection(db, "projects"));
   const results = [];
   snap.forEach((doc) => {
     const data = doc.data();
-    if (data.title && data.title.toLowerCase().includes(term))
-      results.push(data);
+    if (data.title && data.title.toLowerCase().includes(term)) {
+      results.push({ id: doc.id, ...data });
+    }
   });
-  if (backBtn) backBtn.style.display = "block";
+  
+  backBtn.style.display = "block";
+  backBtn.onclick = showYears;
   navInfo.innerText = "Risultati della ricerca...";
   renderCards(results);
 });
 
 window.visualizza = (fileURL) => {
-  if (!fileURL || fileURL === "undefined" || fileURL.trim() === "") {
-    alert("Errore: Il file non è disponibile oppure il link è vuoto.");
-    return;
-  }
-
-  let secureURL = fileURL;
-  if (secureURL.startsWith("http://")) {
-    secureURL = secureURL.replace("http://", "https://");
-  }
-
-  window.open(secureURL, "_blank");
+  if (!fileURL) return alert("File non disponibile.");
+  window.open(fileURL, "_blank");
 };
 
-if (backBtn) backBtn.onclick = showYears;
+// --- FUNZIONI SOCIAL GLOBALI ---
+
+window.toggleLike = async (docId, btnElement) => {
+  if (!currentUser) return alert("Devi fare il login per mettere Mi Piace!");
+  const docRef = doc(db, "projects", docId);
+  const countSpan = btnElement.querySelector(".like-count");
+  let currentCount = parseInt(countSpan.innerText);
+
+  if (btnElement.classList.contains("active-like")) {
+    await updateDoc(docRef, { likes: arrayRemove(currentUser.uid) });
+    btnElement.classList.remove("active-like");
+    countSpan.innerText = currentCount - 1;
+  } else {
+    await updateDoc(docRef, { likes: arrayUnion(currentUser.uid) });
+    btnElement.classList.add("active-like");
+    countSpan.innerText = currentCount + 1;
+  }
+};
+
+window.toggleFavorite = async (docId, btnElement) => {
+  if (!currentUser) return alert("Devi fare il login per salvare nei preferiti!");
+  const docRef = doc(db, "projects", docId);
+
+  if (btnElement.classList.contains("active-fav")) {
+    await updateDoc(docRef, { favorites: arrayRemove(currentUser.uid) });
+    btnElement.classList.remove("active-fav");
+  } else {
+    await updateDoc(docRef, { favorites: arrayUnion(currentUser.uid) });
+    btnElement.classList.add("active-fav");
+  }
+};
+
+// --- GESTIONE COMMENTI ---
+const commentsModal = document.getElementById("comments-modal");
+
+window.openComments = async (docId) => {
+  currentDocForComments = docId;
+  commentsModal.style.display = "flex";
+  await loadComments(docId);
+};
+
+document.getElementById("close-comments").onclick = () => {
+  commentsModal.style.display = "none";
+  currentDocForComments = null;
+};
+
+async function loadComments(docId) {
+  const list = document.getElementById("comments-list");
+  list.innerHTML = "<p>Caricamento commenti...</p>";
+  
+  const docSnap = await getDoc(doc(db, "projects", docId));
+  if (docSnap.exists()) {
+    const comments = docSnap.data().comments || [];
+    list.innerHTML = "";
+    if (comments.length === 0) {
+      list.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Nessun commento. Sii il primo!</p>";
+      return;
+    }
+    comments.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "comment-box";
+      div.innerHTML = `<div class="comment-author">${c.authorName}</div><div>${c.text}</div>`;
+      list.appendChild(div);
+    });
+  }
+}
+
+document.getElementById("send-comment").onclick = async () => {
+  if (!currentUser) return alert("Devi fare il login per commentare!");
+  const input = document.getElementById("new-comment");
+  const text = input.value.trim();
+  if (!text || !currentDocForComments) return;
+
+  const newComment = {
+    authorName: currentUser.displayName || "Studente",
+    authorUid: currentUser.uid,
+    text: text,
+    timestamp: new Date().toISOString()
+  };
+
+  const docRef = doc(db, "projects", currentDocForComments);
+  await updateDoc(docRef, { comments: arrayUnion(newComment) });
+  
+  input.value = "";
+  await loadComments(currentDocForComments); // Ricarica la lista dei commenti
+};
+
+// Avvio Iniziale
 showYears();
