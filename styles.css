@@ -132,34 +132,56 @@ body {
 }
 
 /* MAGIA: Personalizzazione dell'Input File */
+/* MAGIA: Personalizzazione dell'Input File in stile Drag & Drop */
 input[type="file"] {
   width: 100%;
-  padding: 20px;
-  background: #f8fafc;
+  padding: 40px 20px;
+  background: var(--surface);
   border: 2px dashed #cbd5e1;
-  border-radius: 12px;
+  border-radius: 24px; /* Rettangoli molto più tondeggianti */
   text-align: center;
   cursor: pointer;
-  color: var(--text-muted);
-  font-family: inherit;
+  /* Rendiamo trasparente il testo di default del browser */
+  color: transparent; 
+  position: relative;
   transition: all 0.2s ease;
 }
 
 input[type="file"]:hover {
   border-color: var(--primary);
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 
-/* Stile per il bottone nativo "Scegli file" interno all'input */
+/* Testo principale personalizzato (Titolo) */
+input[type="file"]::before {
+  content: '📁 Clicca per caricare o trascina il file qui';
+  display: block;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+/* Testo secondario personalizzato (Sottotitolo) */
+input[type="file"]::after {
+  content: 'Supporta PDF, DOCX, JPG, PNG';
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+/* Pulsante interno impaginato sotto ai testi */
 input[type="file"]::file-selector-button {
+  display: block;
+  margin: 0 auto; /* Centra il bottone */
   background: var(--primary);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 24px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  margin-right: 15px;
   transition: background 0.2s;
   font-family: inherit;
 }
