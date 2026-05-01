@@ -24,50 +24,86 @@ const provider = new GoogleAuthProvider();
 const CLOUD_NAME = "dkzbg6vyo";
 const UPLOAD_PRESET = "unsigned_preset_123";
 
-const authBtn = document.getElementById("auth-btn");
-const profileBtn = document.getElementById("profile-btn");
-const modal = document.getElementById("auth-modal");
-const profileModal = document.getElementById("profile-modal");
-
 let currentUser = null;
 let uploadedFileUrl = "";
 let uploadedThumbUrl = "";
 
-// Gestione Auth
+// Elementi HTML presi in modo sicuro
+const authBtn = document.getElementById("auth-btn");
+const profileBtn = document.getElementById("profile-btn");
+const modal = document.getElementById("auth-modal");
+const profileModal = document.getElementById("profile-modal");
+const uploadCard = document.querySelector(".upload-card"); // Il tuo blocco caricamento
+
+// GESTIONE LOGIN E TRASPARENZA BLOCCO UPLOAD
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
-    authBtn.innerText = "Ciao, " + (user.displayName || "Studente");
-    authBtn.style.background = "#10b981";
-    profileBtn.style.display = "block";
+    if (authBtn) {
+      authBtn.innerText = "Ciao, " + (user.displayName || "Studente");
+      authBtn.style.background = "#10b981"; // Verde
+    }
+    if (profileBtn) profileBtn.style.display = "block";
+    
+    // Utente loggato: il blocco pubblicazione è acceso e cliccabile
+    if (uploadCard) {
+      uploadCard.style.opacity = "1";
+      uploadCard.style.pointerEvents = "auto";
+    }
   } else {
     currentUser = null;
-    authBtn.innerText = "Login";
-    authBtn.style.background = "var(--primary)";
-    profileBtn.style.display = "none";
+    if (authBtn) {
+      authBtn.innerText = "Login";
+      authBtn.style.background = "var(--primary)";
+    }
+    if (profileBtn) profileBtn.style.display = "none";
+    
+    // Utente disconnesso: il blocco pubblicazione diventa semi-trasparente e bloccato
+    if (uploadCard) {
+      uploadCard.style.opacity = "0.4";
+      uploadCard.style.pointerEvents = "none";
+    }
   }
 });
 
-// Bottoni Finestre
-authBtn.onclick = () => { if (!currentUser) modal.style.display = "flex"; };
-document.getElementById("close-modal").onclick = () => (modal.style.display = "none");
-profileBtn.onclick = () => { profileModal.style.display = "flex"; document.getElementById("profile-email").innerText = currentUser.email; loadMyUploads(); };
-document.getElementById("close-profile").onclick = () => (profileModal.style.display = "none");
+// APERTURA/CHIUSURA FINESTRE (Controlli anti-crash)
+if (authBtn && modal) {
+  authBtn.onclick = () => { if (!currentUser) modal.style.display = "flex"; };
+}
+const closeModal = document.getElementById("close-modal");
+if (closeModal && modal) closeModal.onclick = () => (modal.style.display = "none");
 
-// Tab Profilo
-document.getElementById("tab-uploads").onclick = () => {
-  document.getElementById("tab-uploads").className = "btn-primary";
-  document.getElementById("tab-favorites").className = "btn-secondary";
-  loadMyUploads();
-};
-document.getElementById("tab-favorites").onclick = () => {
-  document.getElementById("tab-favorites").className = "btn-primary";
-  document.getElementById("tab-uploads").className = "btn-secondary";
-  loadMyFavorites();
-};
+if (profileBtn && profileModal) {
+  profileBtn.onclick = () => { 
+    profileModal.style.display = "flex"; 
+    const pe = document.getElementById("profile-email");
+    if(pe) pe.innerText = currentUser.email; 
+    loadMyUploads(); 
+  };
+}
+const closeProfile = document.getElementById("close-profile");
+if (closeProfile && profileModal) closeProfile.onclick = () => (profileModal.style.display = "none");
+
+// GESTIONE PROFILO (Ignorata se non hai messo il codice HTML)
+const tabUploads = document.getElementById("tab-uploads");
+const tabFavorites = document.getElementById("tab-favorites");
+
+if (tabUploads && tabFavorites) {
+  tabUploads.onclick = () => {
+    tabUploads.className = "btn-primary";
+    tabFavorites.className = "btn-secondary";
+    loadMyUploads();
+  };
+  tabFavorites.onclick = () => {
+    tabFavorites.className = "btn-primary";
+    tabUploads.className = "btn-secondary";
+    loadMyFavorites();
+  };
+}
 
 async function loadMyUploads() {
   const container = document.getElementById("profile-content");
+  if(!container) return; // Se non c'è, si ferma senza errori
   container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento in corso...</p>";
   const q = query(collection(db, "projects"), where("authorUid", "==", currentUser.uid));
   const snap = await getDocs(q);
@@ -77,7 +113,6 @@ async function loadMyUploads() {
 
   snap.forEach((docSnap) => {
     const data = docSnap.data();
-    // Anteprima: se è vuota usa l'immagine segnaposto
     const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=Anteprima";
     const div = document.createElement("div");
     div.className = "card";
@@ -104,6 +139,7 @@ async function loadMyUploads() {
 
 async function loadMyFavorites() {
   const container = document.getElementById("profile-content");
+  if(!container) return;
   container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento preferiti...</p>";
   const q = query(collection(db, "projects"), where("favorites", "array-contains", currentUser.uid));
   const snap = await getDocs(q);
@@ -126,46 +162,55 @@ async function loadMyFavorites() {
   });
 }
 
-document.getElementById("logout-btn").onclick = () => { signOut(auth).then(() => { profileModal.style.display = "none"; location.reload(); }); };
+const logoutBtn = document.getElementById("logout-btn");
+if(logoutBtn) {
+  logoutBtn.onclick = () => { signOut(auth).then(() => { if(profileModal) profileModal.style.display = "none"; location.reload(); }); };
+}
 
-// Cloudinary
-if (document.getElementById("upload-widget")) {
+// LOGICA CLOUDINARY
+const uploadWidgetBtn = document.getElementById("upload-widget");
+if (uploadWidgetBtn && typeof cloudinary !== "undefined") {
   const myWidget = cloudinary.createUploadWidget(
     { cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET },
     (error, result) => {
       if (!error && result && result.event === "success") {
         uploadedFileUrl = result.info.secure_url;
         uploadedThumbUrl = uploadedFileUrl.endsWith(".pdf") ? uploadedFileUrl.replace(".pdf", ".jpg") : uploadedFileUrl;
-        document.getElementById("file-status").innerText = "✅ File caricato con successo!";
+        const statusP = document.getElementById("file-status");
+        if(statusP) statusP.innerText = "✅ File caricato con successo!";
       }
     }
   );
-  document.getElementById("upload-widget").addEventListener("click", () => {
+  uploadWidgetBtn.addEventListener("click", () => {
     if (!currentUser) return alert("Devi fare il login per caricare un file.");
     myWidget.open();
   });
 }
 
-// Pubblicazione DB (File O Link)
-if (document.getElementById("publish-btn")) {
-  const uploadBtn = document.getElementById("publish-btn");
-  uploadBtn.onclick = async () => {
+// SALVATAGGIO IN ARCHIVIO
+const publishBtn = document.getElementById("publish-btn");
+if (publishBtn) {
+  publishBtn.onclick = async () => {
     if (!currentUser) return alert("Fai il login prima di pubblicare.");
-    const t = document.getElementById("doc-title").value;
-    const y = document.getElementById("doc-year").value;
-    const s = document.getElementById("doc-subject").value;
-    const linkInput = document.getElementById("doc-link").value;
     
-    // Controlla se c'è un file da tasto OPPURE un link incollato
+    const tEl = document.getElementById("doc-title");
+    const yEl = document.getElementById("doc-year");
+    const sEl = document.getElementById("doc-subject");
+    const linkEl = document.getElementById("doc-link"); // Se l'hai aggiunto
+
+    const t = tEl ? tEl.value : "";
+    const y = yEl ? yEl.value : "";
+    const s = sEl ? sEl.value : "";
+    const linkInput = linkEl ? linkEl.value : "";
+    
     const finalUrl = uploadedFileUrl || linkInput;
 
     if (!t || !finalUrl) return alert("Inserisci il titolo e carica un file oppure incolla un link!");
 
-    // Immagine d'anteprima standard se mettono un link esterno
     const finalThumb = uploadedThumbUrl || "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500";
 
-    uploadBtn.innerText = "Pubblicazione...";
-    uploadBtn.disabled = true;
+    publishBtn.innerText = "Pubblicazione...";
+    publishBtn.disabled = true;
 
     try {
       await addDoc(collection(db, "projects"), {
@@ -183,17 +228,51 @@ if (document.getElementById("publish-btn")) {
       window.location.reload();
     } catch (err) {
       alert("Errore durante il salvataggio: " + err.message);
-      uploadBtn.innerText = "Pubblica Appunto";
-      uploadBtn.disabled = false;
+      publishBtn.innerText = "Pubblica Appunto";
+      publishBtn.disabled = false;
     }
   };
 }
 
-// Login
-document.getElementById("do-login").onclick = () => {
-  signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
-    .then(() => (modal.style.display = "none")).catch((err) => alert(err.message));
-};
-document.getElementById("do-register").onclick = () => {
-  const n = document.getElementById("reg-name").value;
-  createUserWithEmailAndPassword(auth, document.getElementById("reg-email").
+// LOGICA SISTEMA DI ACCESSO
+const doLogin = document.getElementById("do-login");
+if(doLogin) {
+  doLogin.onclick = () => {
+    signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
+      .then(() => { if(modal) modal.style.display = "none"; }).catch((err) => alert(err.message));
+  };
+}
+const doRegister = document.getElementById("do-register");
+if(doRegister) {
+  doRegister.onclick = () => {
+    const n = document.getElementById("reg-name").value;
+    createUserWithEmailAndPassword(auth, document.getElementById("reg-email").value, document.getElementById("reg-password").value)
+      .then((res) => { updateProfile(res.user, { displayName: n }); if(modal) modal.style.display = "none"; })
+      .catch((err) => alert(err.message));
+  };
+}
+const googleLogin = document.getElementById("google-login");
+if(googleLogin) {
+  googleLogin.onclick = () => {
+    signInWithPopup(auth, provider).then(() => { if(modal) modal.style.display = "none"; }).catch((err) => alert(err.message));
+  };
+}
+
+const viewLogin = document.getElementById("auth-view-login");
+const viewReg = document.getElementById("auth-view-register");
+const goToReg = document.getElementById("go-to-reg");
+const goToLogin = document.getElementById("go-to-login");
+
+if(goToReg && viewLogin && viewReg) {
+  goToReg.onclick = () => { viewLogin.style.display = "none"; viewReg.style.display = "block"; };
+}
+if(goToLogin && viewLogin && viewReg) {
+  goToLogin.onclick = () => { viewLogin.style.display = "block"; viewReg.style.display = "none"; };
+}
+
+// REGISTRAZIONE PWA
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((err) => console.log(err));
+  });
+}
