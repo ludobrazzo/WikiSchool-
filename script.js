@@ -177,7 +177,7 @@ document.getElementById("go-to-login").onclick = () => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/sw.js")
+      .register("./sw.js") // <-- AGGIUNTO IL PUNTO QUI
       .then((registration) => {
         console.log("Service Worker registrato con successo:", registration.scope);
       })
@@ -186,4 +186,5 @@ if ("serviceWorker" in navigator) {
       });
   });
 }
+
 
