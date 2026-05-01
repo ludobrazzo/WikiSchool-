@@ -2,7 +2,7 @@
   "name": "WikiSchool",
   "short_name": "WikiSchool",
   "description": "Digitalizza e condividi i tuoi appunti scolastici",
-  "start_url": "/index.html",
+  "start_url": "./index.html", 
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#6366f1",
