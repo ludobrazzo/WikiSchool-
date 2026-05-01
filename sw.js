@@ -1,4 +1,4 @@
-const CACHE_NAME = "wikischool-v1";
+const CACHE_NAME = "wikischool-v2";
 const assetsToCache = [
   "./",
   "./index.html",
@@ -9,20 +9,19 @@ const assetsToCache = [
   "./manifest.json"
 ];
 
-
-
-// Installazione: salviamo i file principali nella cache
+// Installa e forza subito l'aggiornamento
 self.addEventListener("install", (event) => {
+  self.skipWaiting(); 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("Caching file principali...");
       return cache.addAll(assetsToCache);
     })
   );
 });
 
-// Attivazione: eliminiamo eventuali cache vecchie se aggiorniamo l'app
+// Elimina la vecchia memoria "v1" che ti bloccava il sito
 self.addEventListener("activate", (event) => {
+  self.clients.claim();
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
@@ -32,11 +31,18 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch: quando l'app chiede un file, proviamo a darglielo dalla cache, altrimenti lo scarichiamo da internet
+// Network First: Cerca SEMPRE su internet prima di caricare la memoria vecchia
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
