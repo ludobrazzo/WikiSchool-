@@ -1,13 +1,15 @@
 const CACHE_NAME = "wikischool-v1";
 const assetsToCache = [
-  "/",
-  "/index.html",
-  "/archivio.html",
-  "/styles.css",
-  "/script.js",
-  "/script_archivio.js",
-  "/manifest.json"
+  "./",
+  "./index.html",
+  "./archivio.html",
+  "./styles.css",
+  "./script.js",
+  "./script_archivio.js",
+  "./manifest.json"
 ];
+
+
 
 // Installazione: salviamo i file principali nella cache
 self.addEventListener("install", (event) => {
