@@ -48,7 +48,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Bottoni Modali
+// Bottoni Finestre
 authBtn.onclick = () => { if (!currentUser) modal.style.display = "flex"; };
 document.getElementById("close-modal").onclick = () => (modal.style.display = "none");
 profileBtn.onclick = () => { profileModal.style.display = "flex"; document.getElementById("profile-email").innerText = currentUser.email; loadMyUploads(); };
@@ -68,21 +68,21 @@ document.getElementById("tab-favorites").onclick = () => {
 
 async function loadMyUploads() {
   const container = document.getElementById("profile-content");
-  container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento...</p>";
+  container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento in corso...</p>";
   const q = query(collection(db, "projects"), where("authorUid", "==", currentUser.uid));
   const snap = await getDocs(q);
   container.innerHTML = "";
   
-  if (snap.empty) { container.innerHTML = "<p style='grid-column: 1/-1;'>Non hai caricato appunti.</p>"; return; }
+  if (snap.empty) { container.innerHTML = "<p style='grid-column: 1/-1;'>Non hai ancora caricato appunti.</p>"; return; }
 
   snap.forEach((docSnap) => {
     const data = docSnap.data();
-    // Immagine sicura: thumbUrl, o fileUrl, o segnaposto
-    const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=File";
+    // Anteprima: se è vuota usa l'immagine segnaposto
+    const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=Anteprima";
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
-      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" />
+      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.open('${data.fileUrl}', '_blank')" />
       <div class="card-content">
         <div class="card-title" onclick="window.open('${data.fileUrl}', '_blank')">${data.title}</div>
         <div class="card-meta">${data.category} - ${data.year}° Anno</div>
@@ -94,7 +94,7 @@ async function loadMyUploads() {
 
   document.querySelectorAll(".delete-btn").forEach(btn => {
     btn.onclick = async (e) => {
-      if(confirm("Sei sicuro di voler eliminare questo file?")) {
+      if(confirm("Sei sicuro di voler eliminare questo file dall'archivio?")) {
         await deleteDoc(doc(db, "projects", e.target.getAttribute("data-id")));
         loadMyUploads();
       }
@@ -108,11 +108,11 @@ async function loadMyFavorites() {
   const q = query(collection(db, "projects"), where("favorites", "array-contains", currentUser.uid));
   const snap = await getDocs(q);
   container.innerHTML = "";
-  if (snap.empty) { container.innerHTML = "<p style='grid-column: 1/-1;'>Nessun preferito salvato.</p>"; return; }
+  if (snap.empty) { container.innerHTML = "<p style='grid-column: 1/-1;'>Non hai ancora salvato preferiti.</p>"; return; }
 
   snap.forEach((docSnap) => {
     const data = docSnap.data();
-    const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=File";
+    const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=Anteprima";
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
@@ -136,32 +136,32 @@ if (document.getElementById("upload-widget")) {
       if (!error && result && result.event === "success") {
         uploadedFileUrl = result.info.secure_url;
         uploadedThumbUrl = uploadedFileUrl.endsWith(".pdf") ? uploadedFileUrl.replace(".pdf", ".jpg") : uploadedFileUrl;
-        document.getElementById("file-status").innerText = "✅ File caricato!";
+        document.getElementById("file-status").innerText = "✅ File caricato con successo!";
       }
     }
   );
   document.getElementById("upload-widget").addEventListener("click", () => {
-    if (!currentUser) return alert("Devi fare il login per caricare file.");
+    if (!currentUser) return alert("Devi fare il login per caricare un file.");
     myWidget.open();
   });
 }
 
-// Pubblicazione (Legge sia il File che il Link)
+// Pubblicazione DB (File O Link)
 if (document.getElementById("publish-btn")) {
   const uploadBtn = document.getElementById("publish-btn");
   uploadBtn.onclick = async () => {
-    if (!currentUser) return alert("Fai il login per pubblicare.");
+    if (!currentUser) return alert("Fai il login prima di pubblicare.");
     const t = document.getElementById("doc-title").value;
     const y = document.getElementById("doc-year").value;
     const s = document.getElementById("doc-subject").value;
     const linkInput = document.getElementById("doc-link").value;
     
-    // Controlla se l'utente ha caricato un file tramite tasto, o incollato un link
+    // Controlla se c'è un file da tasto OPPURE un link incollato
     const finalUrl = uploadedFileUrl || linkInput;
 
-    if (!t || !finalUrl) return alert("Inserisci titolo e carica un file o incolla un link!");
+    if (!t || !finalUrl) return alert("Inserisci il titolo e carica un file oppure incolla un link!");
 
-    // Se è un link esterno generico e non abbiamo una thumb di cloudinary, mettiamo un'immagine segnaposto
+    // Immagine d'anteprima standard se mettono un link esterno
     const finalThumb = uploadedThumbUrl || "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500";
 
     uploadBtn.innerText = "Pubblicazione...";
@@ -179,37 +179,21 @@ if (document.getElementById("publish-btn")) {
         likes: [], favorites: [], comments: [],
         createdAt: new Date().toISOString()
       });
-      alert("Appunto caricato con successo!");
+      alert("Appunto caricato e pubblicato con successo!");
       window.location.reload();
     } catch (err) {
-      alert("Errore salvataggio: " + err.message);
+      alert("Errore durante il salvataggio: " + err.message);
       uploadBtn.innerText = "Pubblica Appunto";
       uploadBtn.disabled = false;
     }
   };
 }
 
-// Login logic
+// Login
 document.getElementById("do-login").onclick = () => {
   signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
     .then(() => (modal.style.display = "none")).catch((err) => alert(err.message));
 };
 document.getElementById("do-register").onclick = () => {
   const n = document.getElementById("reg-name").value;
-  createUserWithEmailAndPassword(auth, document.getElementById("reg-email").value, document.getElementById("reg-password").value)
-    .then((res) => { updateProfile(res.user, { displayName: n }); modal.style.display = "none"; })
-    .catch((err) => alert(err.message));
-};
-document.getElementById("google-login").onclick = () => {
-  signInWithPopup(auth, provider).then(() => (modal.style.display = "none")).catch((err) => alert(err.message));
-};
-const viewLogin = document.getElementById("auth-view-login"), viewReg = document.getElementById("auth-view-register");
-document.getElementById("go-to-reg").onclick = () => { viewLogin.style.display = "none"; viewReg.style.display = "block"; };
-document.getElementById("go-to-login").onclick = () => { viewLogin.style.display = "block"; viewReg.style.display = "none"; };
-
-// SW
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((err) => console.log(err));
-  });
-}
+  createUserWithEmailAndPassword(auth, document.getElementById("reg-email").
