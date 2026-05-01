@@ -29,6 +29,7 @@ let selectedYear = null;
 let currentFolderProjects = [];
 let currentDocForComments = null;
 
+// LE TUE 16 MATERIE COMPLETE
 const subjects = [
   { name: "Italiano", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500" },
   { name: "Storia", img: "https://images.unsplash.com/photo-1461301214746-1e109215d6d3?w=500" },
@@ -37,7 +38,15 @@ const subjects = [
   { name: "Informatica", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500" },
   { name: "Fisica", img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500" },
   { name: "Scienze", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
-  { name: "Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" }
+  { name: "Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" },
+  { name: "Filosofia", img: "https://images.unsplash.com/photo-1505664159854-2328114f17f4?w=500" },
+  { name: "Educazione Fisica", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500" },
+  { name: "Latino", img: "https://images.unsplash.com/photo-1555627237-7ea4c346c827?w=500" },
+  { name: "Greco", img: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=500" },
+  { name: "Chimica", img: "https://images.unsplash.com/photo-1532187875605-2fe358a3d46a?w=500" },
+  { name: "Diritto", img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=500" },
+  { name: "Economia", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=500" },
+  { name: "Geografia", img: "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=500" }
 ];
 
 function showYears() {
@@ -78,7 +87,7 @@ function selectYear(y) {
 }
 
 async function loadProjects(cat) {
-  gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Caricamento appunti in corso...</p>";
+  gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Caricamento appunti...</p>";
   navInfo.innerText = `${selectedYear}° Anno > ${cat}`;
   backBtn.onclick = () => selectYear(selectedYear);
 
@@ -88,15 +97,13 @@ async function loadProjects(cat) {
     currentFolderProjects = [];
     snap.forEach((doc) => currentFolderProjects.push({ id: doc.id, ...doc.data() }));
     renderCards(currentFolderProjects);
-  } catch (e) {
-    console.error(e);
-  }
+  } catch (e) { console.error(e); }
 }
 
 function renderCards(projectsArray) {
   gallery.innerHTML = "";
   if (projectsArray.length === 0) {
-    gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color: var(--text-muted)'>Nessun file trovato per questa categoria.</p>";
+    gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color: var(--text-muted)'>Nessun file trovato.</p>";
     return;
   }
 
@@ -104,14 +111,16 @@ function renderCards(projectsArray) {
     const d = document.createElement("div");
     d.className = "card";
     
-    // Controlla se l'utente attuale ha messo like o preferito
     const hasLiked = currentUser && p.likes && p.likes.includes(currentUser.uid) ? "active-like" : "";
     const hasFavorited = currentUser && p.favorites && p.favorites.includes(currentUser.uid) ? "active-fav" : "";
     const likeCount = p.likes ? p.likes.length : 0;
     const commentCount = p.comments ? p.comments.length : 0;
 
+    // Questa riga risolve il problema delle anteprime invisibili
+    const imgSrc = p.thumbUrl || p.fileUrl || 'https://via.placeholder.com/300x200?text=Documento';
+
     d.innerHTML = `
-      <img src="${p.thumbUrl || 'https://via.placeholder.com/400x300?text=Documento'}" alt="Doc" onclick="window.visualizza('${p.fileUrl}')" />
+      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.visualizza('${p.fileUrl}')" />
       <div class="card-content">
         <div class="card-title" onclick="window.visualizza('${p.fileUrl}')">${p.title}</div>
         <div class="card-meta">di ${p.authorName || 'Anonimo'}</div>
@@ -141,19 +150,15 @@ searchBar.addEventListener("input", async (e) => {
     else renderCards(currentFolderProjects);
     return;
   }
-  
   const snap = await getDocs(collection(db, "projects"));
   const results = [];
   snap.forEach((doc) => {
     const data = doc.data();
-    if (data.title && data.title.toLowerCase().includes(term)) {
-      results.push({ id: doc.id, ...data });
-    }
+    if (data.title && data.title.toLowerCase().includes(term)) results.push({ id: doc.id, ...data });
   });
-  
   backBtn.style.display = "block";
   backBtn.onclick = showYears;
-  navInfo.innerText = "Risultati della ricerca...";
+  navInfo.innerText = "Risultati ricerca...";
   renderCards(results);
 });
 
@@ -162,8 +167,7 @@ window.visualizza = (fileURL) => {
   window.open(fileURL, "_blank");
 };
 
-// --- FUNZIONI SOCIAL GLOBALI ---
-
+// Funzioni Social
 window.toggleLike = async (docId, btnElement) => {
   if (!currentUser) return alert("Devi fare il login per mettere Mi Piace!");
   const docRef = doc(db, "projects", docId);
@@ -184,7 +188,6 @@ window.toggleLike = async (docId, btnElement) => {
 window.toggleFavorite = async (docId, btnElement) => {
   if (!currentUser) return alert("Devi fare il login per salvare nei preferiti!");
   const docRef = doc(db, "projects", docId);
-
   if (btnElement.classList.contains("active-fav")) {
     await updateDoc(docRef, { favorites: arrayRemove(currentUser.uid) });
     btnElement.classList.remove("active-fav");
@@ -194,7 +197,7 @@ window.toggleFavorite = async (docId, btnElement) => {
   }
 };
 
-// --- GESTIONE COMMENTI ---
+// Logica Commenti
 const commentsModal = document.getElementById("comments-modal");
 
 window.openComments = async (docId) => {
@@ -210,22 +213,24 @@ document.getElementById("close-comments").onclick = () => {
 
 async function loadComments(docId) {
   const list = document.getElementById("comments-list");
-  list.innerHTML = "<p>Caricamento commenti...</p>";
+  list.innerHTML = "<p style='text-align:center;'>Caricamento...</p>";
   
   const docSnap = await getDoc(doc(db, "projects", docId));
   if (docSnap.exists()) {
     const comments = docSnap.data().comments || [];
     list.innerHTML = "";
     if (comments.length === 0) {
-      list.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Nessun commento. Sii il primo!</p>";
+      list.innerHTML = "<p style='color:var(--text-muted); text-align:center; margin-top:20px;'>Nessun commento. Sii il primo!</p>";
       return;
     }
     comments.forEach(c => {
       const div = document.createElement("div");
       div.className = "comment-box";
-      div.innerHTML = `<div class="comment-author">${c.authorName}</div><div>${c.text}</div>`;
+      div.innerHTML = `<div class="comment-author">${c.authorName}</div><div class="comment-text">${c.text}</div>`;
       list.appendChild(div);
     });
+    // Scrolla automaticamente in basso per leggere l'ultimo messaggio
+    list.scrollTop = list.scrollHeight;
   }
 }
 
@@ -246,8 +251,8 @@ document.getElementById("send-comment").onclick = async () => {
   await updateDoc(docRef, { comments: arrayUnion(newComment) });
   
   input.value = "";
-  await loadComments(currentDocForComments); // Ricarica la lista dei commenti
+  await loadComments(currentDocForComments); 
 };
 
-// Avvio Iniziale
+// Avvio
 showYears();
