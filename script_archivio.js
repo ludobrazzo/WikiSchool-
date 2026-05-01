@@ -31,31 +31,24 @@ let currentDocForComments = null;
 onAuthStateChanged(auth, (user) => { 
   currentUser = user; 
   
-  // Cerchiamo la riga dove si inseriscono i commenti
   const commentInputRow = document.querySelector(".comment-input-row");
   let loginWarning = document.getElementById("comment-login-warning");
 
   if (user) {
-    // Se è loggato: mostra l'input e nascondi l'avviso
     if (commentInputRow) commentInputRow.style.display = "flex";
     if (loginWarning) loginWarning.style.display = "none";
   } else {
-    // Se NON è loggato: nascondi l'input e mostra l'avviso
     if (commentInputRow) {
       commentInputRow.style.display = "none";
-      
-      // Se non avevamo ancora creato il messaggio, lo creiamo ora
       if (!loginWarning) {
         loginWarning = document.createElement("p");
         loginWarning.id = "comment-login-warning";
         loginWarning.style.textAlign = "center";
-        loginWarning.style.color = "#e63946"; // Rosso avviso
+        loginWarning.style.color = "#e63946"; 
         loginWarning.style.fontWeight = "bold";
         loginWarning.style.fontSize = "0.9rem";
         loginWarning.style.marginTop = "10px";
         loginWarning.innerText = "Devi effettuare il login per poter commentare.";
-        
-        // Lo inseriamo prima della barra di input
         commentInputRow.parentNode.insertBefore(loginWarning, commentInputRow);
       } else {
         loginWarning.style.display = "block";
@@ -64,6 +57,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// LISTA MATERIE AGGIORNATA
 const subjects = [
   {
     name: "Italiano",
@@ -199,11 +193,9 @@ function renderCards(projectsArray) {
     const d = document.createElement("div");
     d.className = "card";
     
-    // Controlli per i Mi Piace
     const hasLiked = currentUser && p.likes && p.likes.includes(currentUser.uid) ? "active-like" : "";
     const likeCount = p.likes ? p.likes.length : 0;
     
-    // Controlli per la stellina dei PREFERITI (☆ vuota, ★ piena)
     const isFavorited = currentUser && p.favorites && p.favorites.includes(currentUser.uid);
     const hasFavoritedClass = isFavorited ? "active-fav" : "";
     const starIcon = isFavorited ? "★" : "☆";
@@ -263,7 +255,6 @@ window.visualizza = (fileURL) => {
   window.open(fileURL, "_blank");
 };
 
-// Funzioni Database Mi Piace
 window.toggleLike = async (docId, btnElement) => {
   if (!currentUser) return alert("Devi fare il login per mettere Mi Piace!");
   const docRef = doc(db, "projects", docId);
@@ -281,7 +272,6 @@ window.toggleLike = async (docId, btnElement) => {
   }
 };
 
-// Funzione Database Preferiti (Con animazione stellina)
 window.toggleFavorite = async (docId, btnElement) => {
   if (!currentUser) return alert("Devi fare il login per salvare nei preferiti!");
   const docRef = doc(db, "projects", docId);
@@ -298,7 +288,6 @@ window.toggleFavorite = async (docId, btnElement) => {
   }
 };
 
-// Finestra Commenti Sicura
 const commentsModal = document.getElementById("comments-modal");
 
 window.openComments = async (docId) => {
@@ -362,5 +351,4 @@ if(sendCommentBtn) {
   };
 }
 
-// Avvio Iniziale
 showYears();
