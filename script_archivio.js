@@ -23,11 +23,46 @@ const navInfo = document.getElementById("nav-info");
 const searchBar = document.getElementById("search-bar");
 
 let currentUser = null;
-onAuthStateChanged(auth, (user) => { currentUser = user; });
-
 let selectedYear = null;
 let currentFolderProjects = [];
 let currentDocForComments = null;
+
+// GESTIONE LOGIN E BLOCCO COMMENTI PER UTENTI NON LOGGATI
+onAuthStateChanged(auth, (user) => { 
+  currentUser = user; 
+  
+  // Cerchiamo la riga dove si inseriscono i commenti
+  const commentInputRow = document.querySelector(".comment-input-row");
+  let loginWarning = document.getElementById("comment-login-warning");
+
+  if (user) {
+    // Se è loggato: mostra l'input e nascondi l'avviso
+    if (commentInputRow) commentInputRow.style.display = "flex";
+    if (loginWarning) loginWarning.style.display = "none";
+  } else {
+    // Se NON è loggato: nascondi l'input e mostra l'avviso
+    if (commentInputRow) {
+      commentInputRow.style.display = "none";
+      
+      // Se non avevamo ancora creato il messaggio, lo creiamo ora
+      if (!loginWarning) {
+        loginWarning = document.createElement("p");
+        loginWarning.id = "comment-login-warning";
+        loginWarning.style.textAlign = "center";
+        loginWarning.style.color = "#e63946"; // Rosso avviso
+        loginWarning.style.fontWeight = "bold";
+        loginWarning.style.fontSize = "0.9rem";
+        loginWarning.style.marginTop = "10px";
+        loginWarning.innerText = "Devi effettuare il login per poter commentare.";
+        
+        // Lo inseriamo prima della barra di input
+        commentInputRow.parentNode.insertBefore(loginWarning, commentInputRow);
+      } else {
+        loginWarning.style.display = "block";
+      }
+    }
+  }
+});
 
 // LE TUE 16 MATERIE
 const subjects = [
@@ -50,7 +85,7 @@ const subjects = [
 ];
 
 function showYears() {
-  if(!gallery || !navInfo) return; // Controllo di sicurezza vitale
+  if(!gallery || !navInfo) return; 
   gallery.innerHTML = "";
   navInfo.innerText = "Archivio > Scegli Anno";
   if(backBtn) backBtn.style.display = "none";
@@ -82,7 +117,7 @@ function selectYear(y) {
     const d = document.createElement("div");
     d.className = "card";
     d.innerHTML = `
-      <img src="${sub.img}" alt="${sub.name}" style="cursor:pointer;" />
+      <img src="${sub.img}" alt="${sub.name}" style="cursor:pointer; object-fit: cover;" />
       <div class="card-content"><div class="card-title">${sub.name}</div></div>
     `;
     d.onclick = () => loadProjects(sub.name);
@@ -117,15 +152,20 @@ function renderCards(projectsArray) {
     const d = document.createElement("div");
     d.className = "card";
     
+    // Controlli per i Mi Piace
     const hasLiked = currentUser && p.likes && p.likes.includes(currentUser.uid) ? "active-like" : "";
-    const hasFavorited = currentUser && p.favorites && p.favorites.includes(currentUser.uid) ? "active-fav" : "";
     const likeCount = p.likes ? p.likes.length : 0;
-    const commentCount = p.comments ? p.comments.length : 0;
+    
+    // Controlli per la stellina dei PREFERITI (☆ vuota, ★ piena)
+    const isFavorited = currentUser && p.favorites && p.favorites.includes(currentUser.uid);
+    const hasFavoritedClass = isFavorited ? "active-fav" : "";
+    const starIcon = isFavorited ? "★" : "☆";
 
+    const commentCount = p.comments ? p.comments.length : 0;
     const imgSrc = p.thumbUrl || p.fileUrl || 'https://via.placeholder.com/300x200?text=Anteprima';
 
     d.innerHTML = `
-      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.visualizza('${p.fileUrl}')" />
+      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.visualizza('${p.fileUrl}')" style="object-fit: cover;" />
       <div class="card-content">
         <div class="card-title" onclick="window.visualizza('${p.fileUrl}')">${p.title}</div>
         <div class="card-meta">di ${p.authorName || 'Anonimo'}</div>
@@ -137,8 +177,8 @@ function renderCards(projectsArray) {
           <button class="social-btn" onclick="openComments('${p.id}')">
             💬 <span class="comment-count">${commentCount}</span>
           </button>
-          <button class="social-btn ${hasFavorited}" onclick="toggleFavorite('${p.id}', this)">
-            ⭐
+          <button class="social-btn ${hasFavoritedClass}" onclick="toggleFavorite('${p.id}', this)">
+            <span class="fav-icon" style="font-size: 1.2rem;">${starIcon}</span>
           </button>
         </div>
       </div>
@@ -194,19 +234,24 @@ window.toggleLike = async (docId, btnElement) => {
   }
 };
 
+// Funzione Database Preferiti (Con animazione stellina)
 window.toggleFavorite = async (docId, btnElement) => {
   if (!currentUser) return alert("Devi fare il login per salvare nei preferiti!");
   const docRef = doc(db, "projects", docId);
+  const iconSpan = btnElement.querySelector(".fav-icon");
+
   if (btnElement.classList.contains("active-fav")) {
     await updateDoc(docRef, { favorites: arrayRemove(currentUser.uid) });
     btnElement.classList.remove("active-fav");
+    if (iconSpan) iconSpan.innerText = "☆";
   } else {
     await updateDoc(docRef, { favorites: arrayUnion(currentUser.uid) });
     btnElement.classList.add("active-fav");
+    if (iconSpan) iconSpan.innerText = "★";
   }
 };
 
-// Finestra Commenti Sicura (Non crasha se non hai il codice HTML!)
+// Finestra Commenti Sicura
 const commentsModal = document.getElementById("comments-modal");
 
 window.openComments = async (docId) => {
