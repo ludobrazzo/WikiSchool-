@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WikiSchool | Dashboard</title>
     <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#6366f1" />
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="theme-color" content="#6366f1" />
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script
-      src="https://upload-widget.cloudinary.com/global/all.js"
-      type="text/javascript"
-    ></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 
     <script type="module" src="script.js"></script>
   </head>
@@ -21,219 +18,122 @@
     <nav class="glass-nav">
       <a href="index.html" class="brand">Wiki<span>School</span></a>
       <div style="display: flex; gap: 15px; align-items: center">
-        <a
-          href="archivio.html"
-          style="
-            text-decoration: none;
-            font-weight: 600;
-            color: var(--text-main);
-          "
-          >Esplora Archivio →</a
-        >
-        <button
-          id="auth-btn"
-          class="btn-primary"
-          style="padding: 8px 16px; width: auto"
-        >
-          Login
-        </button>
+        <a href="archivio.html" style="text-decoration: none; font-weight: 600; color: var(--text-main)">Esplora Archivio →</a>
+        <button id="profile-btn" class="btn-secondary" style="display: none; padding: 8px 16px;">Il mio Profilo</button>
+        <button id="auth-btn" class="btn-primary" style="padding: 8px 16px; width: auto">Login</button>
       </div>
     </nav>
 
     <main class="hero">
       <h1>Digitalizza i tuoi <span>Appunti</span>.</h1>
-      <p style="color: var(--text-muted); font-size: 1.1rem">
-        Condividi e organizza i tuoi progetti scolastici.
+      <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px;">
+        Carica i tuoi appunti, crea riassunti e condividili con i tuoi compagni. Un unico posto per tutto il tuo materiale scolastico.
       </p>
+
+      <div class="upload-card">
+        <h3>Carica un nuovo documento</h3>
+        <div class="form-group" style="margin-top: 15px;">
+          <label>Titolo Appunto</label>
+          <input type="text" id="doc-title" placeholder="Es. Riassunto Seconda Guerra Mondiale" />
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+          <div class="form-group" style="flex: 1;">
+            <label>Anno</label>
+            <select id="doc-year">
+              <option value="1">1° Anno</option>
+              <option value="2">2° Anno</option>
+              <option value="3">3° Anno</option>
+              <option value="4">4° Anno</option>
+              <option value="5">5° Anno</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label>Materia</label>
+            <select id="doc-subject">
+              <option value="Italiano">Italiano</option>
+              <option value="Storia">Storia</option>
+              <option value="Matematica">Matematica</option>
+              <option value="Inglese">Inglese</option>
+              <option value="Informatica">Informatica</option>
+              <option value="Fisica">Fisica</option>
+              <option value="Scienze">Scienze</option>
+              <option value="Arte">Arte</option>
+              <option value="Filosofia">Filosofia</option>
+              <option value="Educazione Fisica">Educazione Fisica</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="upload-widget" class="btn-secondary" style="margin-bottom: 15px; width: 100%;">
+          📎 Scegli File (PDF o Immagine)
+        </button>
+        <p id="file-status" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; text-align: center; margin-bottom: 15px;"></p>
+
+        <button id="publish-btn" class="btn-primary" style="width: 100%;">Pubblica Appunto</button>
+      </div>
     </main>
 
-    <div class="container">
-      <div
-        id="login-prompt"
-        style="
-          display: none;
-          text-align: center;
-          padding: 20px;
-          background: #fff;
-          border-radius: 20px;
-          margin-bottom: 20px;
-          border: 2px dashed var(--primary);
-        "
-      >
-        <p style="font-weight: 600; color: var(--primary)">
-          ⚠️ Accedi o Registrati per poter pubblicare i tuoi appunti
-        </p>
-      </div>
-
-      <div class="upload-box-pro" id="upload-box">
-        <div class="form-group">
-          <label>Titolo del Progetto</label>
-          <input
-            type="text"
-            id="title"
-            placeholder="Es. La Rivoluzione Francese"
-          />
-        </div>
-
-        <div class="form-group">
-          <label>Anno Scolastico</label>
-          <select id="year-selector">
-            <option value="" disabled selected>Seleziona l'anno...</option>
-            <option value="1">1° Anno</option>
-            <option value="2">2° Anno</option>
-            <option value="3">3° Anno</option>
-            <option value="4">4° Anno</option>
-            <option value="5">5° Anno</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Materia</label>
-          <select id="category-filter">
-            <option value="" disabled selected>Seleziona la materia...</option>
-            <option value="Italiano">Italiano</option>
-            <option value="Latino">Latino</option>
-            <option value="Storia">Storia</option>
-            <option value="Filosofia">Filosofia</option>
-            <option value="Educazione Civica">Educazione Civica</option>
-            <option value="Matematica">Matematica</option>
-            <option value="Fisica">Fisica</option>
-            <option value="Scienze Naturali">Scienze Naturali</option>
-            <option value="Informatica">Informatica</option>
-            <option value="Disegno e Storia dell'Arte">
-              Disegno e Storia dell'Arte
-            </option>
-            <option value="Inglese">Inglese</option>
-            <option value="Francese">Francese</option>
-            <option value="Spagnolo">Spagnolo</option>
-            <option value="Scienze Umane">Scienze Umane</option>
-            <option value="Diritto ed Economia">Diritto ed Economia</option>
-            <option value="Scienze Motorie">Scienze Motorie</option>
-          </select>
-        </div>
-
-        <div class="upload-options">
-          <div class="upload-option">
-            <label>Carica File (se supera 1MB usare) </label>
-            <input type="file" id="file-selector" accept="image/*,.pdf" />
-          </div>
-          <div class="upload-option">
-            <label>Oppure Link</label>
-            <input
-              type="url"
-              id="external-link"
-              placeholder="https://drive.google.com/..."
-            />
-          </div>
-        </div>
-
-        <button id="upload-btn" class="btn-primary">Pubblica</button>
-        <div
-          id="status"
-          style="
-            text-align: center;
-            margin-top: 15px;
-            font-weight: 600;
-            color: var(--primary);
-          "
-        ></div>
-      </div>
-    </div>
-
-    <div id="login-modal" class="modal-overlay" style="display: none">
-      <div
-        class="upload-box-pro modal-content"
-        style="max-width: 400px; position: relative"
-      >
+    <div id="auth-modal" class="modal-overlay">
+      <div class="modal-content glass-nav" style="padding: 30px;">
         <button id="close-modal" class="close-btn">&times;</button>
-
+        
         <div id="auth-view-login">
-          <h2 style="text-align: center; margin-bottom: 20px">Accedi</h2>
+          <h2 style="margin-bottom: 20px;">Accedi</h2>
           <div class="form-group">
-            <label>Email</label
-            ><input
-              type="email"
-              id="login-email"
-              placeholder="latua@email.it"
-            />
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="latua@email.it" />
           </div>
           <div class="form-group">
-            <label>Password</label
-            ><input type="password" id="login-password" placeholder="••••••" />
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="********" />
           </div>
           <button id="do-login" class="btn-primary">Entra</button>
-          <p style="text-align: center; margin-top: 15px">
-            Nuovo utente?
-            <span
-              id="go-to-reg"
-              style="color: var(--primary); cursor: pointer; font-weight: 700"
-              >Registrati qui</span
-            >
-          </p>
+          <p style="text-align: center; margin-top: 15px">Non hai un account? <span id="go-to-reg" style="color: var(--primary); cursor: pointer; font-weight: 700">Registrati</span></p>
         </div>
 
-        <div id="auth-view-register" style="display: none">
-          <h2 style="text-align: center; margin-bottom: 20px">Registrati</h2>
+        <div id="auth-view-register" style="display: none;">
+          <h2 style="margin-bottom: 20px;">Crea Account</h2>
           <div class="form-group">
-            <label>Nome</label
-            ><input type="text" id="reg-name" placeholder="Il tuo nome" />
+            <label>Nome e Cognome</label>
+            <input type="text" id="reg-name" placeholder="Mario Rossi" />
           </div>
           <div class="form-group">
-            <label>Email</label
-            ><input type="email" id="reg-email" placeholder="latua@email.it" />
+            <label>Email</label>
+            <input type="email" id="reg-email" placeholder="latua@email.it" />
           </div>
           <div class="form-group">
-            <label>Password</label
-            ><input
-              type="password"
-              id="reg-password"
-              placeholder="Minimo 6 caratteri"
-            />
+            <label>Password</label>
+            <input type="password" id="reg-password" placeholder="Minimo 6 caratteri" />
           </div>
           <button id="do-register" class="btn-primary">Crea Account</button>
-          <p style="text-align: center; margin-top: 15px">
-            Hai già un account?
-            <span
-              id="go-to-login"
-              style="color: var(--primary); cursor: pointer; font-weight: 700"
-              >Accedi</span
-            >
-          </p>
+          <p style="text-align: center; margin-top: 15px">Hai già un account? <span id="go-to-login" style="color: var(--primary); cursor: pointer; font-weight: 700">Accedi</span></p>
         </div>
 
-        <div
-          style="
-            text-align: center;
-            margin: 15px 0;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-          "
-        >
-          OPPURE
-        </div>
-        <button
-          id="google-login"
-          class="btn-secondary"
-          style="
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: var(--radius);
-          "
-        >
-          <img
-            src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg"
-            width="20"
-          />
+        <div style="text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.8rem;">OPPURE</div>
+        <button id="google-login" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: white; border: 1px solid #ddd;">
+          <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" width="20" />
           Accedi con Google
         </button>
       </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <div id="profile-modal" class="modal-overlay">
+      <div class="modal-content glass-nav" style="padding: 30px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <button id="close-profile" class="close-btn">&times;</button>
+        <h2 style="margin-bottom: 10px;">Il Mio Profilo</h2>
+        <p id="profile-email" style="color: var(--text-muted); margin-bottom: 20px;"></p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+          <button id="tab-uploads" class="btn-primary" style="flex: 1; padding: 5px;">I Miei Caricamenti</button>
+          <button id="tab-favorites" class="btn-secondary" style="flex: 1; padding: 5px;">I Miei Preferiti</button>
+        </div>
+
+        <div id="profile-content" style="display: flex; flex-direction: column; gap: 15px;">
+          </div>
+
+        <button id="logout-btn" class="btn-secondary" style="width: 100%; margin-top: 20px; border-color: red; color: red;">Esci dall'account</button>
+      </div>
+    </div>
+
   </body>
 </html>
