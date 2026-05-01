@@ -31,15 +31,19 @@
     </div>
 
     <div id="comments-modal" class="modal-overlay">
-      <div class="modal-content glass-nav" style="padding: 20px; max-width: 500px;">
+      <div class="modal-content">
         <button id="close-comments" class="close-btn">&times;</button>
-        <h3>Commenti</h3>
-        <div id="comments-list" style="margin: 15px 0; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+        <h3 style="margin-bottom: 15px;">Commenti</h3>
+        
+        <div class="comment-wrapper">
+          <div id="comments-list" class="comment-list">
+             </div>
+          <div class="comment-input-row">
+            <input type="text" id="new-comment" placeholder="Scrivi un commento..." />
+            <button id="send-comment" class="btn-primary">Invia</button>
           </div>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="new-comment" placeholder="Scrivi un commento..." style="flex: 1; padding: 10px; border-radius: var(--radius); border: 1px solid #ddd;" />
-          <button id="send-comment" class="btn-primary" style="padding: 10px;">Invia</button>
         </div>
+
       </div>
     </div>
 
