@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WikiSchool | Archivio</title>
     <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#6366f1" />
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="theme-color" content="#6366f1" />
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -20,22 +20,27 @@
 
     <div class="container" style="margin-top: 50px">
       <div class="search-container">
-        <input
-          type="text"
-          id="search-bar"
-          placeholder="🔍 Cerca tra tutti gli appunti dell'archivio..."
-        />
+        <input type="text" id="search-bar" placeholder="🔍 Cerca tra tutti gli appunti dell'archivio..." />
       </div>
 
-      <button
-        id="back-btn"
-        class="btn-primary"
-        style="display: none; margin-bottom: 20px"
-      >
+      <button id="back-btn" class="btn-primary" style="display: none; margin-bottom: 20px">
         ← Torna indietro
       </button>
 
       <div id="gallery" class="masonry-grid"></div>
+    </div>
+
+    <div id="comments-modal" class="modal-overlay">
+      <div class="modal-content glass-nav" style="padding: 20px; max-width: 500px;">
+        <button id="close-comments" class="close-btn">&times;</button>
+        <h3>Commenti</h3>
+        <div id="comments-list" style="margin: 15px 0; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+          </div>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="new-comment" placeholder="Scrivi un commento..." style="flex: 1; padding: 10px; border-radius: var(--radius); border: 1px solid #ddd;" />
+          <button id="send-comment" class="btn-primary" style="padding: 10px;">Invia</button>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="script_archivio.js"></script>
