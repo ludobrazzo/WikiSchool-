@@ -25,17 +25,19 @@ const CLOUD_NAME = "dkzbg6vyo";
 const UPLOAD_PRESET = "unsigned_preset_123";
 
 let currentUser = null;
-let uploadedFileUrl = "";
-let uploadedThumbUrl = "";
 
 // Elementi HTML presi in modo sicuro
 const authBtn = document.getElementById("auth-btn");
 const profileBtn = document.getElementById("profile-btn");
 const modal = document.getElementById("auth-modal");
 const profileModal = document.getElementById("profile-modal");
-const uploadCard = document.querySelector(".upload-card"); // Il tuo blocco caricamento
 
-// GESTIONE LOGIN E TRASPARENZA BLOCCO UPLOAD
+// Elementi per il controllo del caricamento
+const uploadCard = document.querySelector(".upload-card"); // Struttura vecchia
+const warningMsg = document.getElementById("login-warning"); // Struttura nuova
+const formContainer = document.getElementById("upload-form-container"); // Struttura nuova
+
+// GESTIONE LOGIN E BLOCCO UPLOAD
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
@@ -45,7 +47,10 @@ onAuthStateChanged(auth, (user) => {
     }
     if (profileBtn) profileBtn.style.display = "block";
     
-    // Utente loggato: il blocco pubblicazione è acceso e cliccabile
+    // Mostra il form di caricamento e nasconde l'avviso
+    if (warningMsg) warningMsg.style.display = "none";
+    if (formContainer) formContainer.style.display = "block";
+    
     if (uploadCard) {
       uploadCard.style.opacity = "1";
       uploadCard.style.pointerEvents = "auto";
@@ -58,7 +63,10 @@ onAuthStateChanged(auth, (user) => {
     }
     if (profileBtn) profileBtn.style.display = "none";
     
-    // Utente disconnesso: il blocco pubblicazione diventa semi-trasparente e bloccato
+    // Nasconde il form e mostra l'avviso "Devi effettuare il login"
+    if (warningMsg) warningMsg.style.display = "block";
+    if (formContainer) formContainer.style.display = "none";
+
     if (uploadCard) {
       uploadCard.style.opacity = "0.4";
       uploadCard.style.pointerEvents = "none";
@@ -70,7 +78,7 @@ onAuthStateChanged(auth, (user) => {
 if (authBtn && modal) {
   authBtn.onclick = () => { if (!currentUser) modal.style.display = "flex"; };
 }
-const closeModal = document.getElementById("close-modal");
+const closeModal = document.getElementById("close-auth") || document.getElementById("close-modal");
 if (closeModal && modal) closeModal.onclick = () => (modal.style.display = "none");
 
 if (profileBtn && profileModal) {
@@ -84,7 +92,7 @@ if (profileBtn && profileModal) {
 const closeProfile = document.getElementById("close-profile");
 if (closeProfile && profileModal) closeProfile.onclick = () => (profileModal.style.display = "none");
 
-// GESTIONE PROFILO (Ignorata se non hai messo il codice HTML)
+// GESTIONE PROFILO UTENTE
 const tabUploads = document.getElementById("tab-uploads");
 const tabFavorites = document.getElementById("tab-favorites");
 
@@ -103,7 +111,7 @@ if (tabUploads && tabFavorites) {
 
 async function loadMyUploads() {
   const container = document.getElementById("profile-content");
-  if(!container) return; // Se non c'è, si ferma senza errori
+  if(!container) return; 
   container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento in corso...</p>";
   const q = query(collection(db, "projects"), where("authorUid", "==", currentUser.uid));
   const snap = await getDocs(q);
@@ -167,56 +175,65 @@ if(logoutBtn) {
   logoutBtn.onclick = () => { signOut(auth).then(() => { if(profileModal) profileModal.style.display = "none"; location.reload(); }); };
 }
 
-// LOGICA CLOUDINARY
-const uploadWidgetBtn = document.getElementById("upload-widget");
-if (uploadWidgetBtn && typeof cloudinary !== "undefined") {
-  const myWidget = cloudinary.createUploadWidget(
-    { cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET },
-    (error, result) => {
-      if (!error && result && result.event === "success") {
-        uploadedFileUrl = result.info.secure_url;
-        uploadedThumbUrl = uploadedFileUrl.endsWith(".pdf") ? uploadedFileUrl.replace(".pdf", ".jpg") : uploadedFileUrl;
-        const statusP = document.getElementById("file-status");
-        if(statusP) statusP.innerText = "✅ File caricato con successo!";
-      }
-    }
-  );
-  uploadWidgetBtn.addEventListener("click", () => {
-    if (!currentUser) return alert("Devi fare il login per caricare un file.");
-    myWidget.open();
-  });
-}
-
-// SALVATAGGIO IN ARCHIVIO
+// 🚀 NUOVO CARICAMENTO CLOUDINARY IN BACKGROUND
 const publishBtn = document.getElementById("publish-btn");
 if (publishBtn) {
-  publishBtn.onclick = async () => {
-    if (!currentUser) return alert("Fai il login prima di pubblicare.");
+  publishBtn.addEventListener("click", async () => {
+    if (!currentUser) return alert("Devi fare il login prima di pubblicare.");
     
-    const tEl = document.getElementById("doc-title");
-    const yEl = document.getElementById("doc-year");
-    const sEl = document.getElementById("doc-subject");
-    const linkEl = document.getElementById("doc-link"); // Se l'hai aggiunto
-
-    const t = tEl ? tEl.value : "";
-    const y = yEl ? yEl.value : "";
-    const s = sEl ? sEl.value : "";
-    const linkInput = linkEl ? linkEl.value : "";
+    // Controlliamo in modo sicuro gli input (adattato sia per HTML nuovo che vecchio)
+    const tEl = document.getElementById("project-title") || document.getElementById("doc-title");
+    const yEl = document.getElementById("project-year") || document.getElementById("doc-year");
+    const sEl = document.getElementById("project-subject") || document.getElementById("doc-subject");
     
-    const finalUrl = uploadedFileUrl || linkInput;
+    // Questo è il nuovo input invisibile
+    const fileInput = document.getElementById("file-input"); 
+    // Questo è il vecchio input link, in caso usino ancora quello
+    const linkInput = document.getElementById("doc-link"); 
 
-    if (!t || !finalUrl) return alert("Inserisci il titolo e carica un file oppure incolla un link!");
+    const title = tEl ? tEl.value : "";
+    const year = yEl ? yEl.value : "";
+    const subject = sEl ? sEl.value : "";
+    
+    const file = (fileInput && fileInput.files.length > 0) ? fileInput.files[0] : null;
+    const linkUrl = linkInput ? linkInput.value : "";
 
-    const finalThumb = uploadedThumbUrl || "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500";
+    if (!title || !year || !subject) return alert("Per favore, compila tutti i campi!");
+    if (!file && !linkUrl) return alert("Carica un file o inserisci un link valido!");
 
-    publishBtn.innerText = "Pubblicazione...";
+    publishBtn.innerText = "Caricamento in corso... ⏳";
     publishBtn.disabled = true;
 
     try {
+      let finalUrl = linkUrl;
+      let finalThumb = "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500"; // Immagine predefinita
+
+      // SE C'È UN FILE DA CARICARE (PDF o Immagine)
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+
+        // Chiamata in background a Cloudinary
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        
+        if (data.error) throw new Error(data.error.message);
+
+        finalUrl = data.secure_url;
+        
+        // Magia di Cloudinary: se è un PDF, genera la miniatura jpg
+        finalThumb = data.format === "pdf" ? finalUrl.replace(".pdf", ".jpg") : finalUrl;
+      }
+
+      // SALVATAGGIO IN FIRESTORE
       await addDoc(collection(db, "projects"), {
-        title: t,
-        year: y,
-        category: s,
+        title: title,
+        year: year,
+        category: subject,
         fileUrl: finalUrl,
         thumbUrl: finalThumb,
         authorName: currentUser.displayName || "Studente",
@@ -224,14 +241,17 @@ if (publishBtn) {
         likes: [], favorites: [], comments: [],
         createdAt: new Date().toISOString()
       });
-      alert("Appunto caricato e pubblicato con successo!");
+
+      alert("Appunto caricato e pubblicato con successo! 🎉");
       window.location.reload();
+
     } catch (err) {
+      console.error(err);
       alert("Errore durante il salvataggio: " + err.message);
       publishBtn.innerText = "Pubblica Appunto";
       publishBtn.disabled = false;
     }
-  };
+  });
 }
 
 // LOGICA SISTEMA DI ACCESSO
@@ -239,7 +259,7 @@ const doLogin = document.getElementById("do-login");
 if(doLogin) {
   doLogin.onclick = () => {
     signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
-      .then(() => { if(modal) modal.style.display = "none"; }).catch((err) => alert(err.message));
+      .then(() => { if(modal) modal.style.display = "none"; }).catch((err) => alert("Errore login: " + err.message));
   };
 }
 const doRegister = document.getElementById("do-register");
@@ -248,7 +268,7 @@ if(doRegister) {
     const n = document.getElementById("reg-name").value;
     createUserWithEmailAndPassword(auth, document.getElementById("reg-email").value, document.getElementById("reg-password").value)
       .then((res) => { updateProfile(res.user, { displayName: n }); if(modal) modal.style.display = "none"; })
-      .catch((err) => alert(err.message));
+      .catch((err) => alert("Errore registrazione: " + err.message));
   };
 }
 const googleLogin = document.getElementById("google-login");
@@ -270,7 +290,7 @@ if(goToLogin && viewLogin && viewReg) {
   goToLogin.onclick = () => { viewLogin.style.display = "block"; viewReg.style.display = "none"; };
 }
 
-// REGISTRAZIONE PWA
+// REGISTRAZIONE SERVICE WORKER (PWA)
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch((err) => console.log(err));
