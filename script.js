@@ -26,35 +26,26 @@ const UPLOAD_PRESET = "unsigned_preset_123";
 
 let currentUser = null;
 
-// Elementi HTML presi in modo sicuro
 const authBtn = document.getElementById("auth-btn");
 const profileBtn = document.getElementById("profile-btn");
 const modal = document.getElementById("auth-modal");
 const profileModal = document.getElementById("profile-modal");
 
-// Elementi per il controllo del caricamento
-const uploadCard = document.querySelector(".upload-card"); // Struttura vecchia
-const warningMsg = document.getElementById("login-warning"); // Struttura nuova
-const formContainer = document.getElementById("upload-form-container"); // Struttura nuova
+const warningMsg = document.getElementById("login-warning"); 
+const formContainer = document.getElementById("upload-form-container"); 
 
-// GESTIONE LOGIN E BLOCCO UPLOAD
+// --- GESTIONE ACCESSO E VISIBILITÀ ---
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
     if (authBtn) {
       authBtn.innerText = "Ciao, " + (user.displayName || "Studente");
-      authBtn.style.background = "#10b981"; // Verde
+      authBtn.style.background = "#10b981"; 
     }
     if (profileBtn) profileBtn.style.display = "block";
     
-    // Mostra il form di caricamento e nasconde l'avviso
     if (warningMsg) warningMsg.style.display = "none";
     if (formContainer) formContainer.style.display = "block";
-    
-    if (uploadCard) {
-      uploadCard.style.opacity = "1";
-      uploadCard.style.pointerEvents = "auto";
-    }
   } else {
     currentUser = null;
     if (authBtn) {
@@ -63,18 +54,27 @@ onAuthStateChanged(auth, (user) => {
     }
     if (profileBtn) profileBtn.style.display = "none";
     
-    // Nasconde il form e mostra l'avviso "Devi effettuare il login"
     if (warningMsg) warningMsg.style.display = "block";
     if (formContainer) formContainer.style.display = "none";
-
-    if (uploadCard) {
-      uploadCard.style.opacity = "0.4";
-      uploadCard.style.pointerEvents = "none";
-    }
   }
 });
 
-// APERTURA/CHIUSURA FINESTRE (Controlli anti-crash)
+// --- MOSTRA IL NOME DEL FILE SELEZIONATO ---
+const fileInput = document.getElementById("file-input");
+const fileNameDisplay = document.getElementById("file-name-display");
+
+if (fileInput && fileNameDisplay) {
+  fileInput.addEventListener("change", function() {
+    if (this.files && this.files.length > 0) {
+      // Quando scegli un file, ti scrive il nome!
+      fileNameDisplay.innerText = "✅ File pronto: " + this.files[0].name;
+    } else {
+      fileNameDisplay.innerText = "";
+    }
+  });
+}
+
+// --- APERTURA/CHIUSURA MODALI ---
 if (authBtn && modal) {
   authBtn.onclick = () => { if (!currentUser) modal.style.display = "flex"; };
 }
@@ -92,7 +92,8 @@ if (profileBtn && profileModal) {
 const closeProfile = document.getElementById("close-profile");
 if (closeProfile && profileModal) closeProfile.onclick = () => (profileModal.style.display = "none");
 
-// GESTIONE PROFILO UTENTE
+
+// --- GESTIONE PROFILO ---
 const tabUploads = document.getElementById("tab-uploads");
 const tabFavorites = document.getElementById("tab-favorites");
 
@@ -175,20 +176,15 @@ if(logoutBtn) {
   logoutBtn.onclick = () => { signOut(auth).then(() => { if(profileModal) profileModal.style.display = "none"; location.reload(); }); };
 }
 
-// 🚀 NUOVO CARICAMENTO CLOUDINARY IN BACKGROUND
+// --- PUBBLICAZIONE IN BACKGROUND ---
 const publishBtn = document.getElementById("publish-btn");
 if (publishBtn) {
   publishBtn.addEventListener("click", async () => {
     if (!currentUser) return alert("Devi fare il login prima di pubblicare.");
     
-    // Controlliamo in modo sicuro gli input (adattato sia per HTML nuovo che vecchio)
-    const tEl = document.getElementById("project-title") || document.getElementById("doc-title");
-    const yEl = document.getElementById("project-year") || document.getElementById("doc-year");
-    const sEl = document.getElementById("project-subject") || document.getElementById("doc-subject");
-    
-    // Questo è il nuovo input invisibile
-    const fileInput = document.getElementById("file-input"); 
-    // Questo è il vecchio input link, in caso usino ancora quello
+    const tEl = document.getElementById("project-title");
+    const yEl = document.getElementById("project-year");
+    const sEl = document.getElementById("project-subject");
     const linkInput = document.getElementById("doc-link"); 
 
     const title = tEl ? tEl.value : "";
@@ -206,15 +202,13 @@ if (publishBtn) {
 
     try {
       let finalUrl = linkUrl;
-      let finalThumb = "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500"; // Immagine predefinita
+      let finalThumb = "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500"; 
 
-      // SE C'È UN FILE DA CARICARE (PDF o Immagine)
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", UPLOAD_PRESET);
 
-        // Chiamata in background a Cloudinary
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
           method: "POST",
           body: formData
@@ -224,12 +218,9 @@ if (publishBtn) {
         if (data.error) throw new Error(data.error.message);
 
         finalUrl = data.secure_url;
-        
-        // Magia di Cloudinary: se è un PDF, genera la miniatura jpg
         finalThumb = data.format === "pdf" ? finalUrl.replace(".pdf", ".jpg") : finalUrl;
       }
 
-      // SALVATAGGIO IN FIRESTORE
       await addDoc(collection(db, "projects"), {
         title: title,
         year: year,
@@ -254,7 +245,7 @@ if (publishBtn) {
   });
 }
 
-// LOGICA SISTEMA DI ACCESSO
+// --- LOGICA LOGIN ---
 const doLogin = document.getElementById("do-login");
 if(doLogin) {
   doLogin.onclick = () => {
@@ -290,7 +281,7 @@ if(goToLogin && viewLogin && viewReg) {
   goToLogin.onclick = () => { viewLogin.style.display = "block"; viewReg.style.display = "none"; };
 }
 
-// REGISTRAZIONE SERVICE WORKER (PWA)
+// PWA
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch((err) => console.log(err));
