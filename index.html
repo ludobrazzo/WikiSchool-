@@ -30,99 +30,94 @@
         Carica i tuoi appunti, crea riassunti e condividili con i tuoi compagni. Un unico posto per tutto il tuo materiale scolastico.
       </p>
 
-      <div class="upload-section card">
-  <h2>📤 Carica un Appunto</h2>
-  <p id="login-warning" style="color: #e63946; font-size: 0.9rem; font-weight: bold;">
-    Devi effettuare il login per poter caricare un file o un link.
-  </p>
-  
-  <div id="upload-form-container" style="display: none; margin-top: 15px;">
-    <input type="text" id="project-title" placeholder="Titolo dell'appunto..." class="form-control" />
-    
-    <select id="project-year" class="form-control" style="margin-top: 10px;">
-      <option value="">Seleziona Anno</option>
-      <option value="1">1° Anno</option>
-      <option value="2">2° Anno</option>
-      <option value="3">3° Anno</option>
-      <option value="4">4° Anno</option>
-      <option value="5">5° Anno</option>
-    </select>
-    
-    <select id="project-subject" class="form-control" style="margin-top: 10px;">
-      <option value="">Seleziona Materia</option>
-      <option value="Italiano">Italiano</option>
-      <option value="Storia">Storia</option>
-      <option value="Matematica">Matematica</option>
-      <option value="Inglese">Inglese</option>
-      <option value="Informatica">Informatica</option>
-      <option value="Fisica">Fisica</option>
-      <option value="Scienze">Scienze</option>
-      <option value="Arte">Arte</option>
-      <option value="Filosofia">Filosofia</option>
-      <option value="Educazione Fisica">Educazione Fisica</option>
-      <option value="Latino">Latino</option>
-      <option value="Greco">Greco</option>
-      <option value="Chimica">Chimica</option>
-      <option value="Diritto">Diritto</option>
-      <option value="Economia">Economia</option>
-      <option value="Geografia">Geografia</option>
-    </select>
-    
-    <input type="file" id="file-input" style="margin-top: 15px;" />
-    
-    <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin: 15px 0;">OPPURE INCOLLA UN LINK ESTERNO</div>
-    <input type="url" id="doc-link" placeholder="https://... (Es. Link di Google Drive, Canva, ecc.)" class="form-control" />
-    
-    <button id="publish-btn" class="btn-primary" style="margin-top: 15px; width: 100%;">Pubblica Appunto</button>
-  </div>
-</div>
-
-
-<div id="auth-modal" class="modal-overlay">
-  <div class="modal-content" style="padding: 30px; text-align: center;">
-    <button id="close-auth" class="close-btn">&times;</button>
-    
-    <div id="auth-view-login">
-      <h2 style="margin-bottom: 20px; color: var(--primary);">Benvenuto! 👋</h2>
-      <div class="form-group">
-        <input type="email" id="login-email" placeholder="La tua email" class="form-control" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"/>
+      <div class="upload-section card" style="max-width: 600px; margin: 0 auto;">
+        <h2>📤 Carica un Appunto</h2>
+        <p id="login-warning" style="color: #e63946; font-size: 0.9rem; font-weight: bold; text-align: center; margin-top: 10px;">
+          Devi effettuare il login per poter caricare un file o un link.
+        </p>
+        
+        <div id="upload-form-container" style="display: none; margin-top: 15px;">
+          <input type="text" id="project-title" placeholder="Titolo dell'appunto..." class="form-control" style="margin-bottom: 10px;" />
+          
+          <select id="project-year" class="form-control" style="margin-bottom: 10px;">
+            <option value="">Seleziona Anno</option>
+            <option value="1">1° Anno</option>
+            <option value="2">2° Anno</option>
+            <option value="3">3° Anno</option>
+            <option value="4">4° Anno</option>
+            <option value="5">5° Anno</option>
+          </select>
+          
+          <select id="project-subject" class="form-control" style="margin-bottom: 15px;">
+            <option value="">Seleziona Materia</option>
+            <option value="Italiano">Italiano</option>
+            <option value="Storia">Storia</option>
+            <option value="Matematica">Matematica</option>
+            <option value="Inglese">Inglese</option>
+            <option value="Informatica">Informatica</option>
+            <option value="Fisica">Fisica</option>
+            <option value="Scienze">Scienze</option>
+            <option value="Arte">Arte</option>
+            <option value="Filosofia">Filosofia</option>
+            <option value="Educazione Fisica">Educazione Fisica</option>
+            <option value="Latino">Latino</option>
+            <option value="Greco">Greco</option>
+            <option value="Chimica">Chimica</option>
+            <option value="Diritto">Diritto</option>
+            <option value="Economia">Economia</option>
+            <option value="Geografia">Geografia</option>
+          </select>
+          
+          <input type="file" id="file-input" />
+          
+          <p id="file-name-display" style="text-align: center; color: var(--primary); font-weight: 800; font-size: 0.9rem; margin-top: 10px; min-height: 20px;"></p>
+          
+          <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin: 15px 0; font-weight: bold;">OPPURE INCOLLA UN LINK ESTERNO</div>
+          <input type="url" id="doc-link" placeholder="https://... (Es. Link di Canva, Drive...)" class="form-control" />
+          
+          <button id="publish-btn" class="btn-primary" style="margin-top: 20px; width: 100%; padding: 15px; font-size: 1.1rem;">Pubblica Appunto</button>
+        </div>
       </div>
-      <div class="form-group">
-        <input type="password" id="login-password" placeholder="Password" class="form-control" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"/>
+    </main>
+
+    <div id="auth-modal" class="modal-overlay">
+      <div class="modal-content" style="padding: 30px; text-align: center;">
+        <button id="close-auth" class="close-btn">&times;</button>
+        
+        <div id="auth-view-login">
+          <h2 style="margin-bottom: 20px; color: var(--primary);">Benvenuto! 👋</h2>
+          <div class="form-group">
+            <input type="email" id="login-email" placeholder="La tua email" class="form-control" style="margin-bottom: 15px;" />
+          </div>
+          <div class="form-group">
+            <input type="password" id="login-password" placeholder="Password" class="form-control" style="margin-bottom: 15px;" />
+          </div>
+          <button id="do-login" class="btn-primary" style="width: 100%; margin-bottom: 10px;">Accedi</button>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Non hai un account? <span id="go-to-reg" style="color: var(--primary); cursor: pointer; font-weight: bold;">Registrati</span></p>
+        </div>
+
+        <div id="auth-view-register" style="display: none;">
+          <h2 style="margin-bottom: 20px; color: var(--primary);">Crea Account ✨</h2>
+          <div class="form-group">
+            <input type="text" id="reg-name" placeholder="Il tuo nome" class="form-control" style="margin-bottom: 15px;" />
+          </div>
+          <div class="form-group">
+            <input type="email" id="reg-email" placeholder="La tua email" class="form-control" style="margin-bottom: 15px;" />
+          </div>
+          <div class="form-group">
+            <input type="password" id="reg-password" placeholder="Password (min. 6 caratteri)" class="form-control" style="margin-bottom: 15px;" />
+          </div>
+          <button id="do-register" class="btn-primary" style="width: 100%; margin-bottom: 10px;">Registrati</button>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Hai già un account? <span id="go-to-login" style="color: var(--primary); cursor: pointer; font-weight: bold;">Accedi</span></p>
+        </div>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;" />
+        <button id="google-login" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
+          <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" width="20" />
+          Continua con Google
+        </button>
       </div>
-      <button id="do-login" class="btn-primary" style="width: 100%; margin-bottom: 10px;">Accedi</button>
-      
-      <p style="font-size: 0.9rem; color: var(--text-muted);">
-        Non hai un account? <span id="go-to-reg" style="color: var(--primary); cursor: pointer; font-weight: bold;">Registrati</span>
-      </p>
     </div>
-
-    <div id="auth-view-register" style="display: none;">
-      <h2 style="margin-bottom: 20px; color: var(--primary);">Crea Account ✨</h2>
-      <div class="form-group">
-        <input type="text" id="reg-name" placeholder="Il tuo nome" class="form-control" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"/>
-      </div>
-      <div class="form-group">
-        <input type="email" id="reg-email" placeholder="La tua email" class="form-control" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"/>
-      </div>
-      <div class="form-group">
-        <input type="password" id="reg-password" placeholder="Password (min. 6 caratteri)" class="form-control" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"/>
-      </div>
-      <button id="do-register" class="btn-primary" style="width: 100%; margin-bottom: 10px;">Registrati</button>
-      
-      <p style="font-size: 0.9rem; color: var(--text-muted);">
-        Hai già un account? <span id="go-to-login" style="color: var(--primary); cursor: pointer; font-weight: bold;">Accedi</span>
-      </p>
-    </div>
-
-    <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;" />
-    
-    <button id="google-login" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
-      <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" width="20" />
-      Continua con Google
-    </button>
-  </div>
-</div>
 
     <div id="profile-modal" class="modal-overlay">
       <div class="modal-content" style="max-width: 900px; width: 95%;">
@@ -135,10 +130,9 @@
           <button id="tab-favorites" class="btn-secondary">I Miei Preferiti</button>
         </div>
 
-        <div id="profile-content" class="masonry-grid">
-        </div>
+        <div id="profile-content" class="masonry-grid"></div>
 
-        <button id="logout-btn" class="btn-secondary" style="width: 100%; margin-top: 20px; border-color: red; color: red;">Esci dall'account</button>
+        <button id="logout-btn" class="btn-secondary" style="width: 100%; margin-top: 20px; border-color: #e63946; color: #e63946;">Esci dall'account</button>
       </div>
     </div>
   </body>
