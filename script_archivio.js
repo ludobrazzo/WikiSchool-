@@ -1,10 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc
+  getFirestore, collection, getDocs, query, where, doc, updateDoc, arrayUnion, arrayRemove, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -19,197 +16,259 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
-const CLOUD_NAME = "dkzbg6vyo";
-const UPLOAD_PRESET = "unsigned_preset_123";
-
-const authBtn = document.getElementById("auth-btn");
-const profileBtn = document.getElementById("profile-btn");
-const modal = document.getElementById("auth-modal");
-const profileModal = document.getElementById("profile-modal");
+const gallery = document.getElementById("gallery");
+const backBtn = document.getElementById("back-btn");
+const navInfo = document.getElementById("nav-info");
+const searchBar = document.getElementById("search-bar");
 
 let currentUser = null;
-let uploadedFileUrl = "";
-let uploadedThumbUrl = "";
+onAuthStateChanged(auth, (user) => { currentUser = user; });
 
-// Gestione Auth
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    authBtn.innerText = "Ciao, " + (user.displayName || "Studente");
-    authBtn.style.background = "#10b981";
-    profileBtn.style.display = "block";
-  } else {
-    currentUser = null;
-    authBtn.innerText = "Login";
-    authBtn.style.background = "var(--primary)";
-    profileBtn.style.display = "none";
-  }
-});
+let selectedYear = null;
+let currentFolderProjects = [];
+let currentDocForComments = null;
 
-// Bottoni Finestre
-authBtn.onclick = () => { if (!currentUser) modal.style.display = "flex"; };
-document.getElementById("close-modal").onclick = () => (modal.style.display = "none");
-profileBtn.onclick = () => { profileModal.style.display = "flex"; document.getElementById("profile-email").innerText = currentUser.email; loadMyUploads(); };
-document.getElementById("close-profile").onclick = () => (profileModal.style.display = "none");
+// LE TUE 16 MATERIE
+const subjects = [
+  { name: "Italiano", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500" },
+  { name: "Storia", img: "https://images.unsplash.com/photo-1461301214746-1e109215d6d3?w=500" },
+  { name: "Matematica", img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500" },
+  { name: "Inglese", img: "https://images.unsplash.com/photo-1528642474498-1af0c17fd8c3?w=500" },
+  { name: "Informatica", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500" },
+  { name: "Fisica", img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500" },
+  { name: "Scienze", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
+  { name: "Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" },
+  { name: "Filosofia", img: "https://images.unsplash.com/photo-1505664159854-2328114f17f4?w=500" },
+  { name: "Educazione Fisica", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500" },
+  { name: "Latino", img: "https://images.unsplash.com/photo-1555627237-7ea4c346c827?w=500" },
+  { name: "Greco", img: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=500" },
+  { name: "Chimica", img: "https://images.unsplash.com/photo-1532187875605-2fe358a3d46a?w=500" },
+  { name: "Diritto", img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=500" },
+  { name: "Economia", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=500" },
+  { name: "Geografia", img: "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=500" }
+];
 
-// Tab Profilo
-document.getElementById("tab-uploads").onclick = () => {
-  document.getElementById("tab-uploads").className = "btn-primary";
-  document.getElementById("tab-favorites").className = "btn-secondary";
-  loadMyUploads();
-};
-document.getElementById("tab-favorites").onclick = () => {
-  document.getElementById("tab-favorites").className = "btn-primary";
-  document.getElementById("tab-uploads").className = "btn-secondary";
-  loadMyFavorites();
-};
-
-async function loadMyUploads() {
-  const container = document.getElementById("profile-content");
-  container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento in corso...</p>";
-  const q = query(collection(db, "projects"), where("authorUid", "==", currentUser.uid));
-  const snap = await getDocs(q);
-  container.innerHTML = "";
+function showYears() {
+  if(!gallery || !navInfo) return; // Controllo di sicurezza vitale
+  gallery.innerHTML = "";
+  navInfo.innerText = "Archivio > Scegli Anno";
+  if(backBtn) backBtn.style.display = "none";
+  selectedYear = null;
   
-  if (snap.empty) { container.innerHTML = "<p style='grid-column: 1/-1;'>Non hai ancora caricato appunti.</p>"; return; }
-
-  snap.forEach((docSnap) => {
-    const data = docSnap.data();
-    // Anteprima: se è vuota usa l'immagine segnaposto
-    const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=Anteprima";
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.open('${data.fileUrl}', '_blank')" />
-      <div class="card-content">
-        <div class="card-title" onclick="window.open('${data.fileUrl}', '_blank')">${data.title}</div>
-        <div class="card-meta">${data.category} - ${data.year}° Anno</div>
-        <button class="delete-btn" data-id="${docSnap.id}">Elimina File</button>
-      </div>
+  for (let i = 1; i <= 5; i++) {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
+      <div style="background: var(--primary); height: 180px; display:flex; align-items:center; justify-content:center; color:white; font-size: 3rem; font-weight:800">${i}°</div>
+      <div class="card-content"><div class="card-title">${i}° Anno</div></div>
     `;
-    container.appendChild(div);
-  });
-
-  document.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.onclick = async (e) => {
-      if(confirm("Sei sicuro di voler eliminare questo file dall'archivio?")) {
-        await deleteDoc(doc(db, "projects", e.target.getAttribute("data-id")));
-        loadMyUploads();
-      }
-    };
-  });
+    d.onclick = () => selectYear(i.toString());
+    gallery.appendChild(d);
+  }
 }
 
-async function loadMyFavorites() {
-  const container = document.getElementById("profile-content");
-  container.innerHTML = "<p style='grid-column: 1/-1;'>Caricamento preferiti...</p>";
-  const q = query(collection(db, "projects"), where("favorites", "array-contains", currentUser.uid));
-  const snap = await getDocs(q);
-  container.innerHTML = "";
-  if (snap.empty) { container.innerHTML = "<p style='grid-column: 1/-1;'>Non hai ancora salvato preferiti.</p>"; return; }
+function selectYear(y) {
+  if(!gallery || !navInfo) return;
+  selectedYear = y;
+  gallery.innerHTML = "";
+  navInfo.innerText = `${y}° Anno > Scegli Materia`;
+  if(backBtn) {
+    backBtn.style.display = "block";
+    backBtn.onclick = showYears;
+  }
 
-  snap.forEach((docSnap) => {
-    const data = docSnap.data();
-    const imgSrc = data.thumbUrl || data.fileUrl || "https://via.placeholder.com/300x200?text=Anteprima";
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.open('${data.fileUrl}', '_blank')" />
-      <div class="card-content">
-        <div class="card-title" onclick="window.open('${data.fileUrl}', '_blank')">${data.title}</div>
-        <div class="card-meta">di ${data.authorName}</div>
-      </div>
+  subjects.forEach(sub => {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
+      <img src="${sub.img}" alt="${sub.name}" style="cursor:pointer;" />
+      <div class="card-content"><div class="card-title">${sub.name}</div></div>
     `;
-    container.appendChild(div);
+    d.onclick = () => loadProjects(sub.name);
+    gallery.appendChild(d);
   });
 }
 
-document.getElementById("logout-btn").onclick = () => { signOut(auth).then(() => { profileModal.style.display = "none"; location.reload(); }); };
+async function loadProjects(cat) {
+  if(!gallery || !navInfo) return;
+  gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Caricamento appunti in corso...</p>";
+  navInfo.innerText = `${selectedYear}° Anno > ${cat}`;
+  if(backBtn) backBtn.onclick = () => selectYear(selectedYear);
 
-// Cloudinary
-if (document.getElementById("upload-widget")) {
-  const myWidget = cloudinary.createUploadWidget(
-    { cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET },
-    (error, result) => {
-      if (!error && result && result.event === "success") {
-        uploadedFileUrl = result.info.secure_url;
-        uploadedThumbUrl = uploadedFileUrl.endsWith(".pdf") ? uploadedFileUrl.replace(".pdf", ".jpg") : uploadedFileUrl;
-        document.getElementById("file-status").innerText = "✅ File caricato con successo!";
-      }
-    }
-  );
-  document.getElementById("upload-widget").addEventListener("click", () => {
-    if (!currentUser) return alert("Devi fare il login per caricare un file.");
-    myWidget.open();
-  });
+  try {
+    const q = query(collection(db, "projects"), where("year", "==", selectedYear), where("category", "==", cat));
+    const snap = await getDocs(q);
+    currentFolderProjects = [];
+    snap.forEach((doc) => currentFolderProjects.push({ id: doc.id, ...doc.data() }));
+    renderCards(currentFolderProjects);
+  } catch (e) { console.error(e); }
 }
 
-// Pubblicazione DB (File O Link)
-if (document.getElementById("publish-btn")) {
-  const uploadBtn = document.getElementById("publish-btn");
-  uploadBtn.onclick = async () => {
-    if (!currentUser) return alert("Fai il login prima di pubblicare.");
-    const t = document.getElementById("doc-title").value;
-    const y = document.getElementById("doc-year").value;
-    const s = document.getElementById("doc-subject").value;
-    const linkInput = document.getElementById("doc-link").value;
+function renderCards(projectsArray) {
+  if(!gallery) return;
+  gallery.innerHTML = "";
+  if (projectsArray.length === 0) {
+    gallery.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color: var(--text-muted)'>Nessun file trovato per questa categoria.</p>";
+    return;
+  }
+
+  projectsArray.forEach((p) => {
+    const d = document.createElement("div");
+    d.className = "card";
     
-    // Controlla se c'è un file da tasto OPPURE un link incollato
-    const finalUrl = uploadedFileUrl || linkInput;
+    const hasLiked = currentUser && p.likes && p.likes.includes(currentUser.uid) ? "active-like" : "";
+    const hasFavorited = currentUser && p.favorites && p.favorites.includes(currentUser.uid) ? "active-fav" : "";
+    const likeCount = p.likes ? p.likes.length : 0;
+    const commentCount = p.comments ? p.comments.length : 0;
 
-    if (!t || !finalUrl) return alert("Inserisci il titolo e carica un file oppure incolla un link!");
+    const imgSrc = p.thumbUrl || p.fileUrl || 'https://via.placeholder.com/300x200?text=Anteprima';
 
-    // Immagine d'anteprima standard se mettono un link esterno
-    const finalThumb = uploadedThumbUrl || "https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=500";
+    d.innerHTML = `
+      <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/300x200?text=Anteprima'" onclick="window.visualizza('${p.fileUrl}')" />
+      <div class="card-content">
+        <div class="card-title" onclick="window.visualizza('${p.fileUrl}')">${p.title}</div>
+        <div class="card-meta">di ${p.authorName || 'Anonimo'}</div>
+        
+        <div class="social-bar">
+          <button class="social-btn ${hasLiked}" onclick="toggleLike('${p.id}', this)">
+            ♥ <span class="like-count">${likeCount}</span>
+          </button>
+          <button class="social-btn" onclick="openComments('${p.id}')">
+            💬 <span class="comment-count">${commentCount}</span>
+          </button>
+          <button class="social-btn ${hasFavorited}" onclick="toggleFavorite('${p.id}', this)">
+            ⭐
+          </button>
+        </div>
+      </div>
+    `;
+    gallery.appendChild(d);
+  });
+}
 
-    uploadBtn.innerText = "Pubblicazione...";
-    uploadBtn.disabled = true;
-
-    try {
-      await addDoc(collection(db, "projects"), {
-        title: t,
-        year: y,
-        category: s,
-        fileUrl: finalUrl,
-        thumbUrl: finalThumb,
-        authorName: currentUser.displayName || "Studente",
-        authorUid: currentUser.uid,
-        likes: [], favorites: [], comments: [],
-        createdAt: new Date().toISOString()
-      });
-      alert("Appunto caricato e pubblicato con successo!");
-      window.location.reload();
-    } catch (err) {
-      alert("Errore durante il salvataggio: " + err.message);
-      uploadBtn.innerText = "Pubblica Appunto";
-      uploadBtn.disabled = false;
+if(searchBar) {
+  searchBar.addEventListener("input", async (e) => {
+    const term = e.target.value.toLowerCase();
+    if (term.length === 0) {
+      if (!selectedYear) showYears();
+      else if (navInfo.innerText.includes("> Scegli Materia")) selectYear(selectedYear);
+      else renderCards(currentFolderProjects);
+      return;
     }
+    const snap = await getDocs(collection(db, "projects"));
+    const results = [];
+    snap.forEach((doc) => {
+      const data = doc.data();
+      if (data.title && data.title.toLowerCase().includes(term)) results.push({ id: doc.id, ...data });
+    });
+    if(backBtn) {
+      backBtn.style.display = "block";
+      backBtn.onclick = showYears;
+    }
+    if(navInfo) navInfo.innerText = "Risultati ricerca...";
+    renderCards(results);
+  });
+}
+
+window.visualizza = (fileURL) => {
+  if (!fileURL) return alert("File non disponibile.");
+  window.open(fileURL, "_blank");
+};
+
+// Funzioni Database Mi Piace
+window.toggleLike = async (docId, btnElement) => {
+  if (!currentUser) return alert("Devi fare il login per mettere Mi Piace!");
+  const docRef = doc(db, "projects", docId);
+  const countSpan = btnElement.querySelector(".like-count");
+  let currentCount = parseInt(countSpan.innerText);
+
+  if (btnElement.classList.contains("active-like")) {
+    await updateDoc(docRef, { likes: arrayRemove(currentUser.uid) });
+    btnElement.classList.remove("active-like");
+    countSpan.innerText = currentCount - 1;
+  } else {
+    await updateDoc(docRef, { likes: arrayUnion(currentUser.uid) });
+    btnElement.classList.add("active-like");
+    countSpan.innerText = currentCount + 1;
+  }
+};
+
+window.toggleFavorite = async (docId, btnElement) => {
+  if (!currentUser) return alert("Devi fare il login per salvare nei preferiti!");
+  const docRef = doc(db, "projects", docId);
+  if (btnElement.classList.contains("active-fav")) {
+    await updateDoc(docRef, { favorites: arrayRemove(currentUser.uid) });
+    btnElement.classList.remove("active-fav");
+  } else {
+    await updateDoc(docRef, { favorites: arrayUnion(currentUser.uid) });
+    btnElement.classList.add("active-fav");
+  }
+};
+
+// Finestra Commenti Sicura (Non crasha se non hai il codice HTML!)
+const commentsModal = document.getElementById("comments-modal");
+
+window.openComments = async (docId) => {
+  if(!commentsModal) return alert("Per usare i commenti devi incollare il codice della finestra nell'HTML.");
+  currentDocForComments = docId;
+  commentsModal.style.display = "flex";
+  await loadComments(docId);
+};
+
+const closeComments = document.getElementById("close-comments");
+if(closeComments) {
+  closeComments.onclick = () => {
+    if(commentsModal) commentsModal.style.display = "none";
+    currentDocForComments = null;
   };
 }
 
-// Login
-document.getElementById("do-login").onclick = () => {
-  signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
-    .then(() => (modal.style.display = "none")).catch((err) => alert(err.message));
-};
-document.getElementById("do-register").onclick = () => {
-  const n = document.getElementById("reg-name").value;
-  createUserWithEmailAndPassword(auth, document.getElementById("reg-email").value, document.getElementById("reg-password").value)
-    .then((res) => { updateProfile(res.user, { displayName: n }); modal.style.display = "none"; })
-    .catch((err) => alert(err.message));
-};
-document.getElementById("google-login").onclick = () => {
-  signInWithPopup(auth, provider).then(() => (modal.style.display = "none")).catch((err) => alert(err.message));
-};
-const viewLogin = document.getElementById("auth-view-login"), viewReg = document.getElementById("auth-view-register");
-document.getElementById("go-to-reg").onclick = () => { viewLogin.style.display = "none"; viewReg.style.display = "block"; };
-document.getElementById("go-to-login").onclick = () => { viewLogin.style.display = "block"; viewReg.style.display = "none"; };
-
-// SW
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((err) => console.log(err));
-  });
+async function loadComments(docId) {
+  const list = document.getElementById("comments-list");
+  if(!list) return;
+  list.innerHTML = "<p style='text-align:center;'>Caricamento commenti in corso...</p>";
+  
+  const docSnap = await getDoc(doc(db, "projects", docId));
+  if (docSnap.exists()) {
+    const comments = docSnap.data().comments || [];
+    list.innerHTML = "";
+    if (comments.length === 0) {
+      list.innerHTML = "<p style='color:var(--text-muted); text-align:center; margin-top:20px;'>Nessun commento. Sii il primo a scriverne uno!</p>";
+      return;
+    }
+    comments.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "comment-box";
+      div.innerHTML = `<div class="comment-author">${c.authorName}</div><div class="comment-text">${c.text}</div>`;
+      list.appendChild(div);
+    });
+    list.scrollTop = list.scrollHeight;
+  }
 }
+
+const sendCommentBtn = document.getElementById("send-comment");
+if(sendCommentBtn) {
+  sendCommentBtn.onclick = async () => {
+    if (!currentUser) return alert("Devi effettuare il login per poter commentare!");
+    const input = document.getElementById("new-comment");
+    const text = input.value.trim();
+    if (!text || !currentDocForComments) return;
+
+    const newComment = {
+      authorName: currentUser.displayName || "Studente",
+      authorUid: currentUser.uid,
+      text: text,
+      timestamp: new Date().toISOString()
+    };
+
+    const docRef = doc(db, "projects", currentDocForComments);
+    await updateDoc(docRef, { comments: arrayUnion(newComment) });
+    
+    input.value = "";
+    await loadComments(currentDocForComments); 
+  };
+}
+
+// Avvio Iniziale
+showYears();
