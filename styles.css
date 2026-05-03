@@ -381,3 +381,85 @@ input[type="file"]::file-selector-button:hover {
   width: 100%;
   margin-top: 10px;
 }
+
+/* =========================================
+   NAVBAR E AZIONI
+   ========================================= */
+.nav-actions {
+  display: flex;
+  gap: 20px; /* Distanza tra gli elementi */
+  align-items: center;
+  flex-grow: 1;
+  justify-content: flex-end; /* Spinge tutto verso destra */
+}
+
+.nav-link {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--primary);
+}
+
+.nav-actions button {
+  padding: 8px 16px;
+  width: auto;
+}
+
+/* =========================================
+   RESPONSIVITÀ (Smartphone e Tablet)
+   ========================================= */
+@media (max-width: 768px) {
+  /* Riorganizza la navbar per evitare l'accavallamento */
+  .glass-nav {
+    padding: 1rem;
+    flex-wrap: wrap; /* Permette agli elementi di andare a capo */
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .nav-actions {
+    justify-content: center;
+    width: 100%; /* Fa prendere ai bottoni tutta la larghezza disponibile */
+    gap: 15px;
+  }
+
+  /* Rimpicciolisce il testo gigante nella home page */
+  .hero {
+    padding: 40px 15px;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem; 
+  }
+
+  /* Adatta il box di caricamento file */
+  .upload-section {
+    padding: 20px 15px;
+  }
+
+  input[type="file"] {
+    padding: 30px 10px;
+  }
+
+  input[type="file"]::before {
+    font-size: 0.95rem; /* Testo del drag&drop più piccolo */
+  }
+}
+
+@media (max-width: 480px) {
+  /* Su schermi piccolissimi, incolonno gli elementi del menu */
+  .nav-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nav-actions button, .nav-link {
+    width: 100%;
+    text-align: center;
+  }
+}
+
