@@ -287,3 +287,37 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch((err) => console.log(err));
   });
 }
+
+
+
+/**
+ * Mostra una notifica Toast.
+ * @param {string} message - Il messaggio da mostrare.
+ * @param {string} type - 'success', 'error', o 'info' (default).
+ */
+export function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  // 1. Crea l'elemento toast
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  // 2. Sceglie un'iconina carina in base al tipo
+  let icon = '💡';
+  if (type === 'success') icon = '✅';
+  if (type === 'error') icon = '❌';
+
+  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+
+  // 3. Lo aggiunge allo schermo
+  container.appendChild(toast);
+
+  // 4. Lo fa sparire dopo 3 secondi (3000 millisecondi)
+  setTimeout(() => {
+    toast.classList.add('fade-out'); // Fa sfumare il toast
+    setTimeout(() => {
+      toast.remove(); // Lo cancella definitivamente dal codice
+    }, 300); // Aspetta che finisca l'animazione CSS
+  }, 3000);
+}
