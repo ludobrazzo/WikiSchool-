@@ -180,7 +180,7 @@ if(logoutBtn) {
 const publishBtn = document.getElementById("publish-btn");
 if (publishBtn) {
   publishBtn.addEventListener("click", async () => {
-    if (!currentUser) return alert("Devi fare il login prima di pubblicare.");
+    if (!currentUser) return showToast("Devi fare il login prima di pubblicare.");
     
     const tEl = document.getElementById("project-title");
     const yEl = document.getElementById("project-year");
@@ -194,8 +194,8 @@ if (publishBtn) {
     const file = (fileInput && fileInput.files.length > 0) ? fileInput.files[0] : null;
     const linkUrl = linkInput ? linkInput.value : "";
 
-    if (!title || !year || !subject) return alert("Per favore, compila tutti i campi!");
-    if (!file && !linkUrl) return alert("Carica un file o inserisci un link valido!");
+    if (!title || !year || !subject) return showToast("Per favore, compila tutti i campi!");
+    if (!file && !linkUrl) return showToast("Carica un file o inserisci un link valido!");
 
     publishBtn.innerText = "Caricamento in corso... ⏳";
     publishBtn.disabled = true;
@@ -233,12 +233,12 @@ if (publishBtn) {
         createdAt: new Date().toISOString()
       });
 
-      alert("Appunto caricato e pubblicato con successo! 🎉");
+      showToast("Appunto caricato e pubblicato con successo! 🎉");
       window.location.reload();
 
     } catch (err) {
       console.error(err);
-      alert("Errore durante il salvataggio: " + err.message);
+      showToast("Errore durante il salvataggio: " + err.message);
       publishBtn.innerText = "Pubblica Appunto";
       publishBtn.disabled = false;
     }
