@@ -250,7 +250,7 @@ const doLogin = document.getElementById("do-login");
 if(doLogin) {
   doLogin.onclick = () => {
     signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
-      .then(() => { if(modal) modal.style.display = "none"; }).catch((err) => alert("Errore login: " + err.message));
+      .then(() => { if(modal) modal.style.display = "none"; }).catch((err) => showToast("Errore login: " + err.message));
   };
 }
 const doRegister = document.getElementById("do-register");
@@ -259,13 +259,13 @@ if(doRegister) {
     const n = document.getElementById("reg-name").value;
     createUserWithEmailAndPassword(auth, document.getElementById("reg-email").value, document.getElementById("reg-password").value)
       .then((res) => { updateProfile(res.user, { displayName: n }); if(modal) modal.style.display = "none"; })
-      .catch((err) => alert("Errore registrazione: " + err.message));
+      .catch((err) => showToast("Errore registrazione: " + err.message));
   };
 }
 const googleLogin = document.getElementById("google-login");
 if(googleLogin) {
   googleLogin.onclick = () => {
-    signInWithPopup(auth, provider).then(() => { if(modal) modal.style.display = "none"; }).catch((err) => alert(err.message));
+    signInWithPopup(auth, provider).then(() => { if(modal) modal.style.display = "none"; }).catch((err) => showToast(err.message));
   };
 }
 
