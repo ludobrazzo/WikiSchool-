@@ -463,3 +463,49 @@ input[type="file"]::file-selector-button:hover {
   }
 }
 
+/* =========================================
+   NOTIFICHE TOAST
+   ========================================= */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999; /* Assicura che stia sempre in primo piano */
+}
+
+.toast {
+  min-width: 250px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left: 5px solid var(--primary); /* Colore base */
+  animation: slideInRight 0.3s ease-out forwards;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Varianti di colore per il bordo sinistro */
+.toast.success { border-left-color: #10b981; } /* Verde smeraldo */
+.toast.error { border-left-color: #ef4444; }   /* Rosso */
+.toast.info { border-left-color: #3b82f6; }    /* Blu */
+
+/* Animazione di entrata da destra */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Classe aggiunta via JS per far sparire il toast in modo fluido */
+.toast.fade-out {
+  opacity: 0;
+}
+
