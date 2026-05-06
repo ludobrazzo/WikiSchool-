@@ -66,7 +66,6 @@ const fileNameDisplay = document.getElementById("file-name-display");
 if (fileInput && fileNameDisplay) {
   fileInput.addEventListener("change", function() {
     if (this.files && this.files.length > 0) {
-      // Quando scegli un file, ti scrive il nome!
       fileNameDisplay.innerText = "✅ File pronto: " + this.files[0].name;
     } else {
       fileNameDisplay.innerText = "";
@@ -139,8 +138,13 @@ async function loadMyUploads() {
   document.querySelectorAll(".delete-btn").forEach(btn => {
     btn.onclick = async (e) => {
       if(confirm("Sei sicuro di voler eliminare questo file dall'archivio?")) {
-        await deleteDoc(doc(db, "projects", e.target.getAttribute("data-id")));
-        loadMyUploads();
+        try {
+            await deleteDoc(doc(db, "projects", e.target.getAttribute("data-id")));
+            showToast("File eliminato con successo", "success");
+            loadMyUploads();
+        } catch (err) {
+            showToast("Errore durante l'eliminazione", "error");
+        }
       }
     };
   });
@@ -173,14 +177,21 @@ async function loadMyFavorites() {
 
 const logoutBtn = document.getElementById("logout-btn");
 if(logoutBtn) {
-  logoutBtn.onclick = () => { signOut(auth).then(() => { if(profileModal) profileModal.style.display = "none"; location.reload(); }); };
+  logoutBtn.onclick = () => { 
+    signOut(auth).then(() => { 
+        if(profileModal) profileModal.style.display = "none"; 
+        showToast("Logout effettuato", "info");
+    }); 
+  };
 }
 
 // --- PUBBLICAZIONE IN BACKGROUND ---
 const publishBtn = document.getElementById("publish-btn");
 if (publishBtn) {
-  publishBtn.addEventListener("click", async () => {
-    if (!currentUser) return showToast("Devi fare il login prima di pubblicare.");
+  publishBtn.addEventListener("click", async (e) => {
+    e.preventDefault(); // Impedisce il refresh del form
+    
+    if (!currentUser) return showToast("Devi fare il login prima di pubblicare.", "error");
     
     const tEl = document.getElementById("project-title");
     const yEl = document.getElementById("project-year");
@@ -194,8 +205,8 @@ if (publishBtn) {
     const file = (fileInput && fileInput.files.length > 0) ? fileInput.files[0] : null;
     const linkUrl = linkInput ? linkInput.value : "";
 
-    if (!title || !year || !subject) return showToast("Per favore, compila tutti i campi!");
-    if (!file && !linkUrl) return showToast("Carica un file o inserisci un link valido!");
+    if (!title || !year || !subject) return showToast("Per favore, compila tutti i campi!", "info");
+    if (!file && !linkUrl) return showToast("Carica un file o inserisci un link valido!", "info");
 
     publishBtn.innerText = "Caricamento in corso... ⏳";
     publishBtn.disabled = true;
@@ -233,12 +244,20 @@ if (publishBtn) {
         createdAt: new Date().toISOString()
       });
 
-      showToast("Appunto caricato e pubblicato con successo! 🎉");
-      window.location.reload();
+      showToast("Appunto pubblicato con successo! 🎉", "success");
+      
+      // Resetta i campi invece di ricaricare
+      if(tEl) tEl.value = "";
+      if(linkInput) linkInput.value = "";
+      if(fileInput) fileInput.value = "";
+      if(fileNameDisplay) fileNameDisplay.innerText = "";
+      
+      publishBtn.innerText = "Pubblica Appunto";
+      publishBtn.disabled = false;
 
     } catch (err) {
       console.error(err);
-      showToast("Errore durante il salvataggio: " + err.message);
+      showToast("Errore durante il salvataggio: " + err.message, "error");
       publishBtn.innerText = "Pubblica Appunto";
       publishBtn.disabled = false;
     }
@@ -248,27 +267,41 @@ if (publishBtn) {
 // --- LOGICA LOGIN ---
 const doLogin = document.getElementById("do-login");
 if(doLogin) {
-  doLogin.onclick = () => {
+  doLogin.onclick = (e) => {
+    e.preventDefault();
     signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value)
-      .then(() => { if(modal) modal.style.display = "none"; }).catch((err) => showToast("Errore login: " + err.message));
+      .then(() => { 
+        if(modal) modal.style.display = "none"; 
+        showToast("Accesso effettuato!", "success");
+      }).catch((err) => showToast("Errore login: " + err.message, "error"));
   };
 }
 const doRegister = document.getElementById("do-register");
 if(doRegister) {
-  doRegister.onclick = () => {
+  doRegister.onclick = (e) => {
+    e.preventDefault();
     const n = document.getElementById("reg-name").value;
     createUserWithEmailAndPassword(auth, document.getElementById("reg-email").value, document.getElementById("reg-password").value)
-      .then((res) => { updateProfile(res.user, { displayName: n }); if(modal) modal.style.display = "none"; })
-      .catch((err) => showToast("Errore registrazione: " + err.message));
+      .then((res) => { 
+        updateProfile(res.user, { displayName: n }); 
+        if(modal) modal.style.display = "none"; 
+        showToast("Account creato con successo!", "success");
+      })
+      .catch((err) => showToast("Errore registrazione: " + err.message, "error"));
   };
 }
 const googleLogin = document.getElementById("google-login");
 if(googleLogin) {
-  googleLogin.onclick = () => {
-    signInWithPopup(auth, provider).then(() => { if(modal) modal.style.display = "none"; }).catch((err) => showToast(err.message));
+  googleLogin.onclick = (e) => {
+    e.preventDefault();
+    signInWithPopup(auth, provider).then(() => { 
+        if(modal) modal.style.display = "none"; 
+        showToast("Accesso con Google effettuato!", "success");
+    }).catch((err) => showToast(err.message, "error"));
   };
 }
 
+// Navigazione tra viste Login/Reg
 const viewLogin = document.getElementById("auth-view-login");
 const viewReg = document.getElementById("auth-view-register");
 const goToReg = document.getElementById("go-to-reg");
@@ -288,36 +321,25 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-
-
 /**
- * Mostra una notifica Toast.
- * @param {string} message - Il messaggio da mostrare.
- * @param {string} type - 'success', 'error', o 'info' (default).
+ * Funzione Toast (esportata o interna)
  */
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
 
-  // 1. Crea l'elemento toast
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
 
-  // 2. Sceglie un'iconina carina in base al tipo
   let icon = '💡';
   if (type === 'success') icon = '✅';
   if (type === 'error') icon = '❌';
 
   toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-
-  // 3. Lo aggiunge allo schermo
   container.appendChild(toast);
 
-  // 4. Lo fa sparire dopo 3 secondi (3000 millisecondi)
   setTimeout(() => {
-    toast.classList.add('fade-out'); // Fa sfumare il toast
-    setTimeout(() => {
-      toast.remove(); // Lo cancella definitivamente dal codice
-    }, 300); // Aspetta che finisca l'animazione CSS
+    toast.classList.add('fade-out');
+    setTimeout(() => { toast.remove(); }, 300);
   }, 3000);
 }
