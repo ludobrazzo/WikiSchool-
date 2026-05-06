@@ -244,13 +244,17 @@ if (publishBtn) {
         createdAt: new Date().toISOString()
       });
 
-      showToast("Appunto pubblicato con successo! 🎉", "success");
+   showToast("Appunto pubblicato con successo! 🎉", "success");
       
-      // Resetta i campi invece di ricaricare
-      if(tEl) tEl.value = "";
-      if(linkInput) linkInput.value = "";
-      if(fileInput) fileInput.value = "";
-      if(fileNameDisplay) fileNameDisplay.innerText = "";
+      // --- RESETTA I CAMPI DOPO IL CARICAMENTO ---
+      if(tEl) tEl.value = "";        // Pulisce il Titolo
+      if(linkInput) linkInput.value = ""; // Pulisce il Link
+      if(fileInput) fileInput.value = ""; // Pulisce il File
+      if(fileNameDisplay) fileNameDisplay.innerText = ""; // Rimuove la scritta del file pronto
+      
+      // AGGIUNGI QUESTE DUE RIGHE QUI:
+      if(yEl) yEl.value = ""; // Resetta l'Anno selezionato
+      if(sEl) sEl.value = ""; // Resetta la Materia selezionata
       
       publishBtn.innerText = "Pubblica Appunto";
       publishBtn.disabled = false;
