@@ -1,32 +1,24 @@
-# WikiSchool-
-
 # 📚 WikiSchool
 
-**WikiSchool** è una piattaforma web pensata per gli studenti, che permette di digitalizzare, organizzare e condividere facilmente i propri appunti e progetti scolastici. 
+**Digitalizza, organizza e condividi i tuoi appunti scolastici.**
 
-Il portale offre un'interfaccia moderna e intuitiva dove gli utenti possono caricare file o link esterni, categorizzarli per anno e materia, e ricercarli rapidamente in un archivio centralizzato.
-
----
-
-## ✨ Funzionalità Principali
-
-* **🔐 Autenticazione Utenti**: Sistema di Login e Registrazione sicuro tramite Email/Password o tramite account Google.
-* **📤 Upload Semplificato**: Caricamento rapido di appunti tramite file (immagini, PDF) o tramite link esterni (es. Google Drive). 
-* **🖼️ Anteprime Intelligenti**: Generazione automatica dell'anteprima (thumbnail) per la prima pagina dei file PDF caricati.
-* **🗂️ Archivio Strutturato**: Navigazione a cartelle per anno scolastico (dal 1° al 5°) e per materia (16 materie scolastiche preimpostate).
-* **🔍 Ricerca Dinamica**: Barra di ricerca globale in tempo reale per trovare rapidamente gli appunti in base al titolo.
-* **📱 Design Responsivo**: Interfaccia "glassmorphism" moderna, con griglie adattive (masonry grid) che garantiscono un'ottima visualizzazione sia su desktop che su dispositivi mobili.
+WikiSchool è un'Applicazione Web Progressiva (PWA) pensata per gli studenti. Permette di creare un archivio digitale centralizzato dove caricare i propri appunti, dividerli per anno e materia, e interagire con il materiale dei propri compagni tramite commenti, mi piace e salvataggi nei preferiti.
 
 ---
 
-## 🛠️ Tecnologie Utilizzate
+## ✨ Caratteristiche Principali
 
-**Frontend:**
-* HTML5 & CSS3 (Variabili CSS, Flexbox, CSS Grid)
-* JavaScript (ES6 Modules, Vanilla JS)
+* **Gestione Appunti:** Carica file dal tuo dispositivo (PDF, DOCX, immagini) o incolla link esterni (Drive, Canva, ecc.).
+* **Archivio Strutturato:** Sfoglia gli appunti filtrandoli per Anno (dal 1° al 5°) e per Materia scolastica (Italiano, Matematica, Latino, ecc.).
+* **Funzionalità Social:** Metti "Mi piace" agli appunti più utili, salvali nei tuoi "Preferiti" per ritrovarli facilmente sul tuo profilo, e lascia commenti per chiedere chiarimenti o ringraziare gli autori.
+* **Autenticazione Sicura:** Login e registrazione tramite Email/Password o con il tuo account Google.
+* **Area Personale:** Un profilo utente dedicato dove gestire i propri caricamenti (con possibilità di eliminarli) e visualizzare la bacheca dei propri preferiti.
+* **PWA (Progressive Web App):** Grazie al Service Worker e al manifest, WikiSchool è installabile sui dispositivi mobili e sfrutta una strategia di caching per caricamenti più rapidi e supporto offline.
+* **Design Responsivo e Moderno:** Interfaccia intuitiva con design in stile *Glassmorphism*, pulsanti chiari e una griglia Masonry per la visualizzazione delle card.
 
-**Backend & Servizi:**
-* **[Firebase Authentication](https://firebase.google.com/docs/auth)**: Per la gestione sicura degli accessi.
-* **[Firebase Firestore](https://firebase.google.com/docs/firestore)**: Database NoSQL in tempo reale per salvare i metadati dei progetti (titolo, autore, anno, materia).
-* **[Cloudinary API](https://cloudinary.com/)**: Servizio di cloud storage per il caricamento dei file e l'ottimizzazione automatica dei media (inclusa la conversione PDF-to-Image).
+---
 
+## 🛠 Tecnologie Utilizzate
+
+* **Frontend:** HTML5, CSS3 (Custom Properties, Flexbox, CSS Grid/Masonry), Vanilla JavaScript (ES6 Modules).
+* **Backend & Database:**
