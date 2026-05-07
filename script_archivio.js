@@ -4,9 +4,6 @@ import {
   getFirestore, collection, getDocs, query, where, doc, updateDoc, arrayUnion, arrayRemove, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- IMPORT IA AGGIUNTO ---
-import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDl9CCciK9P1od4ITzpskYsP5Sa5N7ukOE",
   authDomain: "wikischool-vero.firebaseapp.com",
@@ -19,10 +16,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-// --- CONFIGURAZIONE IA ---
-// Inserisci la tua chiave API qui sotto
-const genAI = new GoogleGenerativeAI("AIzaSyABSFwXZg1WLMZtpz9s0PqauE9T_ZjFyDM");
 
 const gallery = document.getElementById("gallery");
 const backBtn = document.getElementById("back-btn");
@@ -66,22 +59,70 @@ onAuthStateChanged(auth, (user) => {
 
 // LISTA MATERIE AGGIORNATA
 const subjects = [
-  { name: "Italiano", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500" },
-  { name: "Latino", img: "https://images.unsplash.com/photo-1543165796-5426273eaab3?w=500" },
-  { name: "Storia", img: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800" },
-  { name: "Filosofia", img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800" },
-  { name: "Educazione Civica", img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=500" },
-  { name: "Matematica", img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500" },
-  { name: "Fisica", img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500" },
-  { name: "Scienze Naturali", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
-  { name: "Informatica", img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500" },
-  { name: "Disegno e Storia dell'Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" },
-  { name: "Inglese", img: "https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=500" },
-  { name: "Francese", img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500" },
-  { name: "Spagnolo", img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=500" },
-  { name: "Scienze Umane", img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500" },
-  { name: "Diritto ed Economia", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500" },
-  { name: "Scienze Motorie", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500" },
+  {
+    name: "Italiano",
+    img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500",
+  },
+  {
+    name: "Latino",
+    img: "https://images.unsplash.com/photo-1543165796-5426273eaab3?w=500",
+  },
+  {
+    name: "Storia",
+    img: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800",
+  },
+  {
+    name: "Filosofia",
+    img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800",
+  },
+  {
+    name: "Educazione Civica",
+    img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=500",
+  },
+  {
+    name: "Matematica",
+    img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500",
+  },
+  {
+    name: "Fisica",
+    img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500",
+  },
+  {
+    name: "Scienze Naturali",
+    img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500",
+  },
+  {
+    name: "Informatica",
+    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500",
+  },
+  {
+    name: "Disegno e Storia dell'Arte",
+    img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500",
+  },
+  {
+    name: "Inglese",
+    img: "https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=500",
+  },
+  {
+    name: "Francese",
+    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500",
+  },
+  {
+    name: "Spagnolo",
+    img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=500",
+  },
+  {
+    name: "Scienze Umane",
+    img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500",
+  },
+  {
+    name: "Diritto ed Economia",
+    img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500",
+  },
+  {
+    name: "Scienze Motorie",
+    img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500",
+  },
 ];
 
 function showYears() {
@@ -250,17 +291,9 @@ window.toggleFavorite = async (docId, btnElement) => {
 const commentsModal = document.getElementById("comments-modal");
 
 window.openComments = async (docId) => {
-  if(!commentsModal) return alert("Modale commenti non trovata.");
+  if(!commentsModal) return alert("Per usare i commenti devi incollare il codice della finestra nell'HTML.");
   currentDocForComments = docId;
   commentsModal.style.display = "flex";
-  
-  // Resetta la sezione IA ogni volta che apri una nuova finestra
-  const aiResponse = document.getElementById("ai-response");
-  if(aiResponse) {
-    aiResponse.style.display = "none";
-    aiResponse.innerText = "";
-  }
-
   await loadComments(docId);
 };
 
@@ -315,42 +348,6 @@ if(sendCommentBtn) {
     
     input.value = "";
     await loadComments(currentDocForComments); 
-  };
-}
-
-// --- LOGICA IA AGGIUNTA ---
-const aiBtn = document.getElementById("ask-ai-btn");
-const aiResponse = document.getElementById("ai-response");
-
-if (aiBtn) {
-  aiBtn.onclick = async () => {
-    if (!currentDocForComments) return;
-
-    aiBtn.innerText = "Analisi in corso... ⏳";
-    aiBtn.disabled = true;
-    aiResponse.style.display = "block";
-    aiResponse.innerText = "Gemini sta analizzando l'appunto...";
-
-    try {
-      const docRef = doc(db, "projects", currentDocForComments);
-      const docSnap = await getDoc(docRef);
-      const data = docSnap.data();
-
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const prompt = `Sei un tutor scolastico esperto. Basandoti sul titolo dell'appunto "${data.title}" e sulla materia "${data.category}", scrivi un riassunto di cosa dovrebbe contenere questo documento e spiega 3 concetti fondamentali legati a questo argomento che potrebbero essere chiesti a un'interrogazione. Sii professionale e chiaro.`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      
-      aiResponse.innerText = response.text();
-    } catch (error) {
-      console.error("Errore IA:", error);
-      aiResponse.innerText = "Ops! C'è stato un problema con l'IA. Assicurati che la chiave API sia corretta.";
-    } finally {
-      aiBtn.innerText = "Genera Riassunto con IA";
-      aiBtn.disabled = false;
-    }
   };
 }
 
