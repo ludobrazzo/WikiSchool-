@@ -387,21 +387,17 @@
 
 <script>
   /* =========================================
-     LOGICA JAVASCRIPT DEL CHATBOT AI
+     LOGICA JAVASCRIPT DEL CHATBOT AI (Con Memoria)
      ========================================= */
   (function() {
-    // Configurazioni API
     const API_KEY = "AIzaSyDsgUgeYImcqQuAx9kgkecvtwhTN5vKZ64";
-    // Utilizziamo gemini-2.5-flash
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
 
-    // Elementi del DOM
     const bubble = document.getElementById('chatbot-bubble');
     const panel = document.getElementById('chatbot-panel');
     const closeBtn = document.getElementById('chatbot-close');
     const sendBtn = document.getElementById('chatbot-send-btn');
     
-    // Nuovi elementi per i due pulsanti
     const galleryBtn = document.getElementById('chatbot-gallery-btn');
     const cameraBtn = document.getElementById('chatbot-camera-btn');
     const fileGallery = document.getElementById('chatbot-file-gallery');
@@ -414,25 +410,38 @@
     const previewImg = document.getElementById('chatbot-preview-img');
     const removeImgBtn = document.getElementById('chatbot-remove-img');
 
-    // Stato
     let currentImageBase64 = null;
     let currentImageMimeType = null;
     
-    // Cronologia Chat (Context)
-    let chatHistory = [];
+    // 💾 RECUPERO MEMORIA: Carichiamo la chat salvata (se esiste)
+    let chatHistory = JSON.parse(sessionStorage.getItem('wikibot_history')) || [];
+    let savedUI = sessionStorage.getItem('wikibot_ui');
+    
+    if (savedUI) {
+      messagesBox.innerHTML = savedUI; // Ripristina i messaggi a schermo
+    }
 
-    // Prompt di sistema per istruire il bot sul suo ruolo
     const systemInstruction = {
       parts: [{
         text: "Sei WikiBot, un assistente virtuale integrato nella piattaforma scolastica 'WikiSchool'. Il tuo scopo è aiutare gli studenti. Sii sempre amichevole, chiaro e usa un tono incoraggiante. Rispondi in italiano. Puoi analizzare gli appunti, spiegare concetti di matematica, storia, scienze, ecc. Usa la formattazione markdown (grassetto, elenchi) per rendere le risposte leggibili. Se ti mandano una foto, analizzala attentamente."
       }]
     };
 
-    // Apertura/Chiusura Pannello
+    // Salva la memoria nel browser
+    function saveMemory() {
+      sessionStorage.setItem('wikibot_history', JSON.stringify(chatHistory));
+      try {
+        sessionStorage.setItem('wikibot_ui', messagesBox.innerHTML);
+      } catch (e) {
+        console.warn("Troppe foto caricate, impossibile salvare la UI in memoria.");
+      }
+    }
+
     bubble.addEventListener('click', () => {
       panel.classList.toggle('active');
       if (panel.classList.contains('active')) {
         textInput.focus();
+        scrollToBottom();
       }
     });
 
@@ -440,28 +449,27 @@
       panel.classList.remove('active');
     });
 
-    // Gestione clic sui due pulsanti separati
     galleryBtn.addEventListener('click', () => fileGallery.click());
     cameraBtn.addEventListener('click', () => fileCamera.click());
 
-    // Funzione unica per gestire l'immagine caricata
     function handleImageUpload(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64String = event.target.result;
-          // Estrai solo i dati puri
           currentImageBase64 = base64String.split(',')[1];
           currentImageMimeType = file.type;
           
           previewImg.src = base64String;
           previewArea.classList.add('active');
+          
+          // Se il telefono ricarica la pagina, almeno riapriamo subito il pannello
+          sessionStorage.setItem('wikibot_panel_open', 'true');
           textInput.focus();
         };
         reader.readAsDataURL(file);
       }
-      // Resetta l'input
       e.target.value = "";
     }
 
@@ -476,7 +484,6 @@
       previewArea.classList.remove('active');
     });
 
-    // Formattazione del testo
     function formatText(text) {
       return text
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -484,7 +491,6 @@
         .replace(/\n/g, '<br>');
     }
 
-    // Aggiungi un messaggio all'interfaccia
     function addMessage(text, sender, imgSrc = null) {
       const msgDiv = document.createElement('div');
       msgDiv.className = `msg-bubble msg-${sender}`;
@@ -501,9 +507,9 @@
       
       messagesBox.appendChild(msgDiv);
       scrollToBottom();
+      saveMemory(); // 💾 Salva dopo ogni messaggio
     }
 
-    // Mostra indicatore di caricamento
     function showTypingIndicator() {
       const id = 'typing-' + Date.now();
       const msgDiv = document.createElement('div');
@@ -524,16 +530,13 @@
       messagesBox.scrollTop = messagesBox.scrollHeight;
     }
 
-    // Invio richiesta a Gemini API
     async function sendMessage() {
       const text = textInput.value.trim();
       
       if (!text && !currentImageBase64) return;
 
-      // 1. Mostra messaggio utente
       addMessage(text, 'user', previewImg.src !== "" && currentImageBase64 ? previewImg.src : null);
       
-      // 2. Prepara il payload per l'API
       const userParts = [];
       if (text) userParts.push({ text: text });
       if (currentImageBase64) {
@@ -545,14 +548,12 @@
         });
       }
 
-      // Salva nella cronologia locale
       chatHistory.push({ role: "user", parts: userParts });
+      saveMemory(); // 💾 Salva cronologia
 
-      // Svuota input
       textInput.value = "";
-      removeImgBtn.click(); // Svuota l'immagine
+      removeImgBtn.click(); 
       
-      // 3. Mostra animazione caricamento
       const typingId = showTypingIndicator();
 
       try {
@@ -576,6 +577,7 @@
           const botText = data.candidates[0].content.parts[0].text;
           addMessage(botText, 'bot');
           chatHistory.push({ role: "model", parts: [{ text: botText }] });
+          saveMemory(); // 💾 Salva risposta bot
         } else {
           throw new Error("Risposta vuota dall'API");
         }
@@ -584,23 +586,28 @@
         console.error("Errore Gemini API:", error);
         removeTypingIndicator(typingId);
         
-        addMessage(`⚠️ **Errore di sistema:** ${error.message} <br><br><small>Se l'errore dice "Payload too large" o "Request payload size exceeds the limit", l'immagine allegata è troppo pesante.</small>`, 'bot');
-        
-        // Rimuovi l'ultimo messaggio dalla cronologia se c'è stato un errore
+        addMessage(`⚠️ **Errore di sistema:** ${error.message}`, 'bot');
         chatHistory.pop();
+        saveMemory();
       }
-
     }
 
-    // Event Listeners per l'invio
     sendBtn.addEventListener('click', sendMessage);
     
     textInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') sendMessage();
     });
 
+    // Se avevamo lasciato il pannello aperto prima del refresh, lo riapriamo
+    if (sessionStorage.getItem('wikibot_panel_open') === 'true') {
+      panel.classList.add('active');
+      sessionStorage.removeItem('wikibot_panel_open');
+      scrollToBottom();
+    }
+
   })();
 </script>
+
 
 
   </body>
