@@ -638,7 +638,7 @@
       // 3. Mostra animazione caricamento
       const typingId = showTypingIndicator();
 
-      try {
+            try {
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -650,6 +650,11 @@
 
         const data = await response.json();
         removeTypingIndicator(typingId);
+
+        // Controllo se Google ci ha restituito un errore specifico
+        if (data.error) {
+           throw new Error(data.error.message);
+        }
 
         if (data.candidates && data.candidates.length > 0) {
           const botText = data.candidates[0].content.parts[0].text;
@@ -663,10 +668,14 @@
       } catch (error) {
         console.error("Errore Gemini API:", error);
         removeTypingIndicator(typingId);
-        addMessage("Scusa, ho riscontrato un problema di connessione. Riprova tra poco! 🔌", 'bot');
+        
+        // ORA IL BOT STAMPERÀ IL VERO MOTIVO DELL'ERRORE
+        addMessage(`⚠️ **Errore di sistema:** ${error.message} <br><br><small>Se l'errore dice "Payload too large" o "Request payload size exceeds the limit", l'immagine allegata è troppo pesante.</small>`, 'bot');
+        
         // Rimuovi l'ultimo messaggio dalla cronologia se c'è stato un errore
         chatHistory.pop();
       }
+
     }
 
     // Event Listeners per l'invio
