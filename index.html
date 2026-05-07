@@ -144,13 +144,8 @@
       </div>
     </div>
     <div id="toast-container"></div>
-    <!-- ==========================================
-     WIKIBOT AI - CHATBOT WIDGET
-     Copia tutto questo blocco e incollalo appena 
-     prima del tag </body> in index.html e archivio.html
-     ========================================== -->
-
-<style>
+    
+    <style>
   /* =========================================
      STILI DEL CHATBOT AI (Adattati a WikiSchool)
      ========================================= */
@@ -355,12 +350,12 @@
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px; /* Ridotto il gap per far stare i pulsanti comodamente */
   }
 
   .chatbot-input-field {
     flex: 1;
-    padding: 12px 18px;
+    padding: 12px 15px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 24px;
@@ -384,8 +379,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     transition: all 0.2s ease;
   }
@@ -398,6 +393,7 @@
   .chatbot-send-btn {
     background: #6366f1;
     color: white;
+    margin-left: 5px;
   }
 
   .chatbot-send-btn:hover {
@@ -429,7 +425,6 @@
 </style>
 
 <div id="wikibot-wrapper">
-  <!-- Bolla del Chatbot -->
   <div id="chatbot-bubble" class="chatbot-bubble">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -438,7 +433,6 @@
     </svg>
   </div>
 
-  <!-- Pannello della Chat -->
   <div id="chatbot-panel" class="chatbot-panel">
     <div class="chatbot-header">
       <div class="chatbot-header-title">
@@ -454,7 +448,6 @@
       </div>
     </div>
 
-    <!-- Area Anteprima Immagine -->
     <div id="chatbot-preview-area" class="chatbot-preview-area">
       <img id="chatbot-preview-img" src="" alt="Anteprima">
       <div style="flex:1; font-size: 0.8rem; color: #64748b;">Immagine allegata pronta.</div>
@@ -462,15 +455,18 @@
     </div>
 
     <div class="chatbot-input-area">
-      <!-- apre la fotocamera su mobile -->
-      <input type="file" id="chatbot-file-input" accept="image/*" style="display: none;">
-
+      <input type="file" id="chatbot-file-gallery" accept="image/*" style="display: none;">
+      <input type="file" id="chatbot-file-camera" accept="image/*" capture="environment" style="display: none;">
       
-      <button id="chatbot-attach-btn" class="chatbot-btn" title="Allega foto o scatta">
+      <button id="chatbot-gallery-btn" class="chatbot-btn" title="Allega dalla Galleria">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
       </button>
+
+      <button id="chatbot-camera-btn" class="chatbot-btn" title="Scatta Foto">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+      </button>
       
-      <input type="text" id="chatbot-text-input" class="chatbot-input-field" placeholder="Chiedi qualcosa a WikiBot...">
+      <input type="text" id="chatbot-text-input" class="chatbot-input-field" placeholder="Chiedi a WikiBot...">
       
       <button id="chatbot-send-btn" class="chatbot-btn chatbot-send-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -486,18 +482,21 @@
   (function() {
     // Configurazioni API
     const API_KEY = "AIzaSyDsgUgeYImcqQuAx9kgkecvtwhTN5vKZ64";
-    // Utilizziamo gemini-1.5-flash in quanto ottimizzato per testo + immagini velocemente
+    // Utilizziamo gemini-2.5-flash
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
-
-
 
     // Elementi del DOM
     const bubble = document.getElementById('chatbot-bubble');
     const panel = document.getElementById('chatbot-panel');
     const closeBtn = document.getElementById('chatbot-close');
     const sendBtn = document.getElementById('chatbot-send-btn');
-    const attachBtn = document.getElementById('chatbot-attach-btn');
-    const fileInput = document.getElementById('chatbot-file-input');
+    
+    // Nuovi elementi per i due pulsanti
+    const galleryBtn = document.getElementById('chatbot-gallery-btn');
+    const cameraBtn = document.getElementById('chatbot-camera-btn');
+    const fileGallery = document.getElementById('chatbot-file-gallery');
+    const fileCamera = document.getElementById('chatbot-file-camera');
+    
     const textInput = document.getElementById('chatbot-text-input');
     const messagesBox = document.getElementById('chatbot-messages');
     
@@ -531,18 +530,18 @@
       panel.classList.remove('active');
     });
 
-    // Gestione Allegati (File e Fotocamera)
-    attachBtn.addEventListener('click', () => {
-      fileInput.click();
-    });
+    // Gestione clic sui due pulsanti separati
+    galleryBtn.addEventListener('click', () => fileGallery.click());
+    cameraBtn.addEventListener('click', () => fileCamera.click());
 
-    fileInput.addEventListener('change', (e) => {
+    // Funzione unica per gestire l'immagine caricata
+    function handleImageUpload(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64String = event.target.result;
-          // Estrai solo i dati puri (rimuove "data:image/jpeg;base64,")
+          // Estrai solo i dati puri
           currentImageBase64 = base64String.split(',')[1];
           currentImageMimeType = file.type;
           
@@ -552,16 +551,22 @@
         };
         reader.readAsDataURL(file);
       }
-    });
+      // Resetta l'input
+      e.target.value = "";
+    }
+
+    fileGallery.addEventListener('change', handleImageUpload);
+    fileCamera.addEventListener('change', handleImageUpload);
 
     removeImgBtn.addEventListener('click', () => {
       currentImageBase64 = null;
       currentImageMimeType = null;
-      fileInput.value = "";
+      fileGallery.value = "";
+      fileCamera.value = "";
       previewArea.classList.remove('active');
     });
 
-    // Formattazione del testo (Markdown basilare per grassetto e a capo)
+    // Formattazione del testo
     function formatText(text) {
       return text
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -640,7 +645,7 @@
       // 3. Mostra animazione caricamento
       const typingId = showTypingIndicator();
 
-            try {
+      try {
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -653,7 +658,6 @@
         const data = await response.json();
         removeTypingIndicator(typingId);
 
-        // Controllo se Google ci ha restituito un errore specifico
         if (data.error) {
            throw new Error(data.error.message);
         }
@@ -661,7 +665,6 @@
         if (data.candidates && data.candidates.length > 0) {
           const botText = data.candidates[0].content.parts[0].text;
           addMessage(botText, 'bot');
-          // Salva la risposta nella cronologia
           chatHistory.push({ role: "model", parts: [{ text: botText }] });
         } else {
           throw new Error("Risposta vuota dall'API");
@@ -671,7 +674,6 @@
         console.error("Errore Gemini API:", error);
         removeTypingIndicator(typingId);
         
-        // ORA IL BOT STAMPERÀ IL VERO MOTIVO DELL'ERRORE
         addMessage(`⚠️ **Errore di sistema:** ${error.message} <br><br><small>Se l'errore dice "Payload too large" o "Request payload size exceeds the limit", l'immagine allegata è troppo pesante.</small>`, 'bot');
         
         // Rimuovi l'ultimo messaggio dalla cronologia se c'è stato un errore
