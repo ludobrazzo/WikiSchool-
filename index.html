@@ -476,8 +476,29 @@
 </div>
 
 <script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    startup: {
+      pageReady: () => {
+        return MathJax.startup.defaultPageReady().then(() => {
+          // Appena ricarichi la pagina, sistema le formule ripescate dalla memoria
+          const messagesBox = document.getElementById('chatbot-messages');
+          if (messagesBox) {
+            MathJax.typesetPromise([messagesBox]);
+          }
+        });
+      }
+    }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+<script>
   /* =========================================
-     LOGICA JAVASCRIPT DEL CHATBOT AI (Con Memoria)
+     LOGICA JAVASCRIPT DEL CHATBOT AI (Con Memoria & Formule)
      ========================================= */
   (function() {
     const API_KEY = "AIzaSyDsgUgeYImcqQuAx9kgkecvtwhTN5vKZ64";
@@ -503,27 +524,26 @@
     let currentImageBase64 = null;
     let currentImageMimeType = null;
     
-    // 💾 RECUPERO MEMORIA: Carichiamo la chat salvata (se esiste)
+    // 💾 RECUPERO MEMORIA
     let chatHistory = JSON.parse(sessionStorage.getItem('wikibot_history')) || [];
     let savedUI = sessionStorage.getItem('wikibot_ui');
     
     if (savedUI) {
-      messagesBox.innerHTML = savedUI; // Ripristina i messaggi a schermo
+      messagesBox.innerHTML = savedUI;
     }
 
     const systemInstruction = {
       parts: [{
-        text: "Sei WikiBot, un assistente virtuale integrato nella piattaforma scolastica 'WikiSchool'. Il tuo scopo è aiutare gli studenti. Sii sempre amichevole, chiaro e usa un tono incoraggiante. Rispondi in italiano. Puoi analizzare gli appunti, spiegare concetti di matematica, storia, scienze, ecc. Usa la formattazione markdown (grassetto, elenchi) per rendere le risposte leggibili. Se ti mandano una foto, analizzala attentamente."
+        text: "Sei WikiBot, un assistente virtuale integrato nella piattaforma scolastica 'WikiSchool'. Il tuo scopo è aiutare gli studenti. Sii sempre amichevole, chiaro e usa un tono incoraggiante. Rispondi in italiano. Se usi formule matematiche o fisiche, scrivi sempre in formato LaTeX."
       }]
     };
 
-    // Salva la memoria nel browser
     function saveMemory() {
       sessionStorage.setItem('wikibot_history', JSON.stringify(chatHistory));
       try {
         sessionStorage.setItem('wikibot_ui', messagesBox.innerHTML);
       } catch (e) {
-        console.warn("Troppe foto caricate, impossibile salvare la UI in memoria.");
+        console.warn("Spazio di memoria limitato per la UI.");
       }
     }
 
@@ -554,7 +574,6 @@
           previewImg.src = base64String;
           previewArea.classList.add('active');
           
-          // Se il telefono ricarica la pagina, almeno riapriamo subito il pannello
           sessionStorage.setItem('wikibot_panel_open', 'true');
           textInput.focus();
         };
@@ -597,7 +616,12 @@
       
       messagesBox.appendChild(msgDiv);
       scrollToBottom();
-      saveMemory(); // 💾 Salva dopo ogni messaggio
+      saveMemory(); 
+
+      // 🧮 Rendering Matematico in tempo reale per i nuovi messaggi
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([msgDiv]).catch((err) => console.log('MathJax error:', err.message));
+      }
     }
 
     function showTypingIndicator() {
@@ -639,7 +663,7 @@
       }
 
       chatHistory.push({ role: "user", parts: userParts });
-      saveMemory(); // 💾 Salva cronologia
+      saveMemory();
 
       textInput.value = "";
       removeImgBtn.click(); 
@@ -667,16 +691,15 @@
           const botText = data.candidates[0].content.parts[0].text;
           addMessage(botText, 'bot');
           chatHistory.push({ role: "model", parts: [{ text: botText }] });
-          saveMemory(); // 💾 Salva risposta bot
+          saveMemory();
         } else {
           throw new Error("Risposta vuota dall'API");
         }
 
       } catch (error) {
-        console.error("Errore Gemini API:", error);
+        console.error("Errore API:", error);
         removeTypingIndicator(typingId);
-        
-        addMessage(`⚠️ **Errore di sistema:** ${error.message}`, 'bot');
+        addMessage(`⚠️ **Errore:** ${error.message}`, 'bot');
         chatHistory.pop();
         saveMemory();
       }
@@ -688,7 +711,6 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // Se avevamo lasciato il pannello aperto prima del refresh, lo riapriamo
     if (sessionStorage.getItem('wikibot_panel_open') === 'true') {
       panel.classList.add('active');
       sessionStorage.removeItem('wikibot_panel_open');
@@ -697,9 +719,6 @@
 
   })();
 </script>
-
-
-
 
   </body>
 </html>
