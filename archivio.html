@@ -304,6 +304,17 @@
     background: #6366f1;
     color: white;
     margin-left: 5px;
+    width: 45px;        /* Larghezza fissa */
+  height: 45px;       /* Altezza identica alla larghezza */
+  border-radius: 50%; /* Questo è il trucco magico per il cerchio perfetto! */
+  padding: 0;         /* Rimuove lo spazio interno che lo deformava */
+  flex-shrink: 0;     /* Impedisce alla barra di testo di "schiacciarlo" */
+  
+  /* Centra perfettamente l'icona o il testo all'interno */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
   }
 
   .chatbot-send-btn:hover {
