@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  getFirestore, collection, getDocs, query, where, doc, updateDoc, arrayUnion, arrayRemove, getDoc
+  getFirestore, collection, getDocs, query, where, doc, updateDoc, arrayUnion, arrayRemove, getDoc, addDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -57,72 +57,24 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// LISTA MATERIE AGGIORNATA
+// LISTA MATERIE
 const subjects = [
-  {
-    name: "Italiano",
-    img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500",
-  },
-  {
-    name: "Latino",
-    img: "https://images.unsplash.com/photo-1543165796-5426273eaab3?w=500",
-  },
-  {
-    name: "Storia",
-    img: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800",
-  },
-  {
-    name: "Filosofia",
-    img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800",
-  },
-  {
-    name: "Educazione Civica",
-    img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=500",
-  },
-  {
-    name: "Matematica",
-    img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500",
-  },
-  {
-    name: "Fisica",
-    img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500",
-  },
-  {
-    name: "Scienze Naturali",
-    img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500",
-  },
-  {
-    name: "Informatica",
-    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500",
-  },
-  {
-    name: "Disegno e Storia dell'Arte",
-    img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500",
-  },
-  {
-    name: "Inglese",
-    img: "https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=500",
-  },
-  {
-    name: "Francese",
-    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500",
-  },
-  {
-    name: "Spagnolo",
-    img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=500",
-  },
-  {
-    name: "Scienze Umane",
-    img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500",
-  },
-  {
-    name: "Diritto ed Economia",
-    img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500",
-  },
-  {
-    name: "Scienze Motorie",
-    img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500",
-  },
+  { name: "Italiano", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500" },
+  { name: "Latino", img: "https://images.unsplash.com/photo-1543165796-5426273eaab3?w=500" },
+  { name: "Storia", img: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800" },
+  { name: "Filosofia", img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800" },
+  { name: "Educazione Civica", img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=500" },
+  { name: "Matematica", img: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500" },
+  { name: "Fisica", img: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=500" },
+  { name: "Scienze Naturali", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
+  { name: "Informatica", img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500" },
+  { name: "Disegno e Storia dell'Arte", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=500" },
+  { name: "Inglese", img: "https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?w=500" },
+  { name: "Francese", img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500" },
+  { name: "Spagnolo", img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=500" },
+  { name: "Scienze Umane", img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500" },
+  { name: "Diritto ed Economia", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500" },
+  { name: "Scienze Motorie", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500" },
 ];
 
 function showYears() {
@@ -291,7 +243,7 @@ window.toggleFavorite = async (docId, btnElement) => {
 const commentsModal = document.getElementById("comments-modal");
 
 window.openComments = async (docId) => {
-  if(!commentsModal) return alert("Per usare i commenti devi incollare il codice della finestra nell'HTML.");
+  if(!commentsModal) return alert("Per usare i commenti devi avere la finestra modale nell'HTML.");
   currentDocForComments = docId;
   commentsModal.style.display = "flex";
   await loadComments(docId);
@@ -315,7 +267,7 @@ async function loadComments(docId) {
     const comments = docSnap.data().comments || [];
     list.innerHTML = "";
     if (comments.length === 0) {
-      list.innerHTML = "<p style='color:var(--text-muted); text-align:center; margin-top:20px;'>Nessun commento. Sii il primo a scriverne uno!</p>";
+      list.innerHTML = "<p style='color:var(--text-muted); text-align:center; margin-top:20px;'>Nessun commento. Sii il primo!</p>";
       return;
     }
     comments.forEach(c => {
@@ -328,6 +280,7 @@ async function loadComments(docId) {
   }
 }
 
+// --- FUNZIONE INVIO COMMENTO CON NOTIFICA ---
 const sendCommentBtn = document.getElementById("send-comment");
 if(sendCommentBtn) {
   sendCommentBtn.onclick = async () => {
@@ -343,11 +296,30 @@ if(sendCommentBtn) {
       timestamp: new Date().toISOString()
     };
 
-    const docRef = doc(db, "projects", currentDocForComments);
-    await updateDoc(docRef, { comments: arrayUnion(newComment) });
-    
-    input.value = "";
-    await loadComments(currentDocForComments); 
+    try {
+      const docRef = doc(db, "projects", currentDocForComments);
+      const docSnap = await getDoc(docRef);
+      const projectData = docSnap.data();
+
+      // 1. Aggiungi il commento all'appunto
+      await updateDoc(docRef, { comments: arrayUnion(newComment) });
+      
+      // 2. Crea la notifica per il proprietario (se non sono io stesso)
+      if (projectData && projectData.ownerUid && projectData.ownerUid !== currentUser.uid) {
+        const notifRef = collection(db, "artifacts", "wikischool-vero", "users", projectData.ownerUid, "notifications");
+        await addDoc(notifRef, {
+          text: `${currentUser.displayName || "Un utente"} ha commentato il tuo appunto: "${projectData.title}"`,
+          projectId: currentDocForComments,
+          read: false,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      input.value = "";
+      await loadComments(currentDocForComments); 
+    } catch (e) {
+      console.error("Errore:", e);
+    }
   };
 }
 
