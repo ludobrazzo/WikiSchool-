@@ -22,10 +22,31 @@ const backBtn = document.getElementById("back-btn");
 const navInfo = document.getElementById("nav-info");
 const searchBar = document.getElementById("search-bar");
 
+
 let currentUser = null;
 let selectedYear = null;
 let currentFolderProjects = [];
 let currentDocForComments = null;
+
+
+const notifBtn = document.getElementById("notif-btn");
+const notifPanel = document.getElementById("notif-panel");
+const notifBadge = document.getElementById("notif-badge");
+
+// Listener per il click sulla campanella
+if (notifBtn) {
+  notifBtn.onclick = (e) => {
+    e.stopPropagation();
+    notifPanel.classList.toggle("active");
+    if (notifBadge) notifBadge.style.display = "none";
+  };
+}
+
+// Chiudi il pannello cliccando fuori
+window.addEventListener('click', () => {
+  if (notifPanel) notifPanel.classList.remove("active");
+});
+
 
 // GESTIONE LOGIN E BLOCCO COMMENTI PER UTENTI NON LOGGATI
 onAuthStateChanged(auth, (user) => { 
