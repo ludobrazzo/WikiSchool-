@@ -7,155 +7,35 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6366f1" />
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      /* Stili specifici per l'integrazione del bot nell'archivio */
-      #wikibot-wrapper {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        z-index: 9999;
-        position: relative;
-      }
-
-      .chatbot-bubble {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        width: 65px;
-        height: 65px;
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.5);
-        cursor: pointer;
-        z-index: 10000;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-      }
-
-      .chatbot-bubble:hover {
-        transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.6);
-      }
-
-      .chatbot-panel {
-        position: fixed;
-        bottom: 100px;
-        right: 25px;
-        width: 380px;
-        max-width: calc(100vw - 50px);
-        height: 600px;
-        max-height: calc(100vh - 140px);
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 24px;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
-        display: flex;
-        flex-direction: column;
-        z-index: 9999;
-        overflow: hidden;
-        opacity: 0;
-        transform: translateY(30px) scale(0.95);
-        pointer-events: none;
-        transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-        transform-origin: bottom right;
-      }
-
-      .chatbot-panel.active {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-        pointer-events: auto;
-      }
-
-      .chatbot-header {
-        padding: 18px 20px;
-        background: white;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .chatbot-messages {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-      }
-
-      .msg-bubble {
-        max-width: 85%;
-        padding: 12px 16px;
-        border-radius: 18px;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        animation: msgFadeIn 0.3s ease;
-      }
-
-      .msg-bot { background: #f1f5f9; color: #0f172a; align-self: flex-start; border-bottom-left-radius: 4px; }
-      .msg-user { background: #6366f1; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-
-      .chatbot-input-area {
-        padding: 15px;
-        background: white;
-        border-top: 1px solid #eee;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .chatbot-input-field {
-        flex: 1;
-        padding: 10px 15px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        outline: none;
-      }
-
-      .chatbot-send-btn {
-        background: #6366f1;
-        color: white;
-        border: none;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
-
-      .chatbot-preview-area {
-        padding: 10px;
-        background: #f8fafc;
-        display: none;
-        align-items: center;
-        gap: 10px;
-        border-top: 1px solid #eee;
-      }
-
-      .chatbot-preview-area.active { display: flex; }
-
-      @keyframes msgFadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    </style>
   </head>
   <body>
     <nav class="glass-nav">
-      <a href="index.html" class="brand">Wiki<span>School</span></a>
-      <div class="nav-actions">
-        <div id="nav-info" style="font-weight: 600; color: var(--primary)">Archivio Materie</div>
-        <a href="index.html" class="nav-link">Home</a>
-      </div>
-    </nav>
+  <a href="index.html" class="brand">Wiki<span>School</span></a>
+  
+  <div class="nav-actions">
+    <div id="nav-info" style="font-weight: 600; color: var(--primary)">
+      Archivio Materie
+    </div>
+    <a href="index.html" class="nav-link">Home</a>
+    <div id="notif-container" class="notif-wrapper" style="display: none;">
+  <div class="notif-icon-btn" id="notif-btn">
+    <span class="bell-icon">🔔</span>
+    <span id="notif-badge" class="notif-badge"></span>
+  </div>
+  
+  <div id="notif-panel" class="notif-panel">
+    <div class="notif-header">Notifiche</div>
+    <div id="notif-list" class="notif-list">
+      <p class="notif-empty">Non hai nuove notifiche</p>
+    </div>
+  </div>
+</div>
+
+  </div>
+</nav>
+
 
     <div class="container" style="margin-top: 50px">
       <div class="search-container">
@@ -169,22 +49,26 @@
       <div id="gallery" class="masonry-grid"></div>
     </div>
 
-    <!-- Modale Commenti -->
     <div id="comments-modal" class="modal-overlay">
       <div class="modal-content">
         <button id="close-comments" class="close-btn">&times;</button>
         <h3 style="margin-bottom: 15px;">Commenti</h3>
+        
         <div class="comment-wrapper">
-          <div id="comments-list" class="comment-list"></div>
+          <div id="comments-list" class="comment-list">
+             </div>
           <div class="comment-input-row">
             <input type="text" id="new-comment" placeholder="Scrivi un commento..." />
             <button id="send-comment" class="btn-primary">Invia</button>
           </div>
         </div>
+
       </div>
     </div>
 
- 
+    <script type="module" src="script_archivio.js"></script>
+    <div id="toast-container"></div>
+    
     <style>
   /* =========================================
      STILI DEL CHATBOT AI (Adattati a WikiSchool)
