@@ -336,6 +336,28 @@ if(goToLogin && viewLogin && viewReg) {
   goToLogin.onclick = () => { viewLogin.style.display = "block"; viewReg.style.display = "none"; };
 }
 
+// --- LOGICA INTERFACCIA NOTIFICHE ---
+const notifBtn = document.getElementById("notif-btn");
+const notifPanel = document.getElementById("notif-panel");
+const notifBadge = document.getElementById("notif-badge");
+
+if (notifBtn) {
+  notifBtn.onclick = (e) => {
+    e.stopPropagation(); // Impedisce la chiusura immediata cliccando sul tasto stesso
+    notifPanel.classList.toggle("active");
+    if (notifBadge) notifBadge.style.display = "none";
+  };
+}
+
+// Chiudi il pannello se clicchi in un punto qualsiasi della pagina
+window.addEventListener('click', () => {
+  if (notifPanel && notifPanel.classList.contains("active")) {
+    notifPanel.classList.remove("active");
+  }
+});
+
+
+
 // PWA
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
