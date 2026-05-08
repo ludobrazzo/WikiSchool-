@@ -36,18 +36,31 @@ const formContainer = document.getElementById("upload-form-container");
 
 // --- GESTIONE ACCESSO E VISIBILITÀ ---
 onAuthStateChanged(auth, (user) => {
+  const notifContainer = document.getElementById("notif-container");
+
   if (user) {
     currentUser = user;
+    
+    // Gestione Pulsanti Auth
     if (authBtn) {
       authBtn.innerText = "Ciao, " + (user.displayName || "Studente");
       authBtn.style.background = "#10b981"; 
     }
     if (profileBtn) profileBtn.style.display = "block";
     
+    // Gestione Form/Warning
     if (warningMsg) warningMsg.style.display = "none";
     if (formContainer) formContainer.style.display = "block";
+
+    // --- LOGICA NOTIFICHE ---
+    if (notifContainer) {
+      notifContainer.style.display = "flex"; // Mostra la campanella
+      caricaNotifiche(user.uid); // Avvia il caricamento delle notifiche
+    }
+
   } else {
     currentUser = null;
+    
     if (authBtn) {
       authBtn.innerText = "Login";
       authBtn.style.background = "var(--primary)";
@@ -56,6 +69,11 @@ onAuthStateChanged(auth, (user) => {
     
     if (warningMsg) warningMsg.style.display = "block";
     if (formContainer) formContainer.style.display = "none";
+
+    // --- LOGICA NOTIFICHE ---
+    if (notifContainer) {
+      notifContainer.style.display = "none"; // Nasconde la campanella al logout
+    }
   }
 });
 
