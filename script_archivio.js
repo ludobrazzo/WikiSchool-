@@ -33,11 +33,21 @@ onAuthStateChanged(auth, (user) => {
   
   const commentInputRow = document.querySelector(".comment-input-row");
   let loginWarning = document.getElementById("comment-login-warning");
+  const notifContainer = document.getElementById("notif-container");
 
   if (user) {
+    // --- LOGICA COMMENTI ---
     if (commentInputRow) commentInputRow.style.display = "flex";
     if (loginWarning) loginWarning.style.display = "none";
+
+    // --- LOGICA NOTIFICHE ---
+    if (notifContainer) {
+      notifContainer.style.display = "flex";
+      caricaNotifiche(user.uid); // Funzione che gestisce il puntino rosso e la lista
+    }
+
   } else {
+    // --- LOGICA COMMENTI ---
     if (commentInputRow) {
       commentInputRow.style.display = "none";
       if (!loginWarning) {
@@ -54,8 +64,14 @@ onAuthStateChanged(auth, (user) => {
         loginWarning.style.display = "block";
       }
     }
+
+    // --- LOGICA NOTIFICHE ---
+    if (notifContainer) {
+      notifContainer.style.display = "none";
+    }
   }
 });
+
 
 // LISTA MATERIE AGGIORNATA
 const subjects = [
