@@ -425,8 +425,9 @@
      LOGICA JAVASCRIPT DEL CHATBOT AI (Con Memoria & Formule)
      ========================================= */
   (function() {
-    const API_KEY = "AIzaSyDsgUgeYImcqQuAx9kgkecvtwhTN5vKZ64";
-    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
+    const key= import.meta.env.API_KEY;
+
+    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key;
 
     const bubble = document.getElementById('chatbot-bubble');
     const panel = document.getElementById('chatbot-panel');
