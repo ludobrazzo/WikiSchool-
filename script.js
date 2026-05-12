@@ -8,7 +8,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  key: import.meta.env.API_KEY,
+  apiKey: "AIzaSyDl9CCciK9P1od4ITzpskYsP5Sa5N7ukOE",
   authDomain: "wikischool-vero.firebaseapp.com",
   projectId: "wikischool-vero",
   storageBucket: "wikischool-vero.firebasestorage.app",
